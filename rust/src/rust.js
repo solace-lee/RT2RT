@@ -1,9 +1,13 @@
-// import * as wasm from "./rt2rt_bg.wasm";
-// export * from "./rt2rt_bg.js";
+// import * as wasm from "../pkg/rt2rt.js";
+// import { fib } from "../pkg/rt2rtjs";
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
 
+// 调用wasm处理
 
-const fs = require('fs');
-const path = require('path');
+// const fs = require('fs');
+// const path = require('path');
 
 // let src = new Uint8Array(fs.readFileSync(path.join(__dirname, "./rt2rt_bg.wasm")))
 // const env = {
@@ -30,7 +34,11 @@ const path = require('path');
 //     console.log(err);
 //   })
 
-fs.readFile(path.join(__dirname, "./pkg/rt2rt_bg.wasm"), (err, data) => {
+
+const __filenameNew = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filenameNew)
+
+fs.readFile(path.join(__dirname, "../pkg/rt2rt_bg.wasm"), (err, data) => {
   WebAssembly.instantiate(data).then((module) => {
     console.log(module.instance.exports.fib(6), '4444');
   }).catch(err => {
