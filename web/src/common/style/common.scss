@@ -1,0 +1,237 @@
+/*
+* @Author: Administrator
+* @Date:   2017-06-19 20:38:21
+* @Last Modified by:   Administrator
+* @Last Modified time: 2017-06-19 20:39:19
+*/
+@import "colorForm";
+
+/*css 初始化 */
+html,
+body,
+ul,
+li,
+ol,
+dl,
+dd,
+dt,
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+form,
+fieldset,
+legend,
+img {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+fieldset,
+img,
+input,
+button {
+  border: none;
+  padding: 0;
+  margin: 0;
+  /*在低版本的ie浏览器里面不支持*/
+  outline-style: none;
+}
+
+.multipleEllipsis{
+  display: -webkit-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-all;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp:2;
+}
+
+.singleEllipsis{
+  text-overflow: ellipsis;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.common_text{
+  color: $fontColor;
+  line-height: 25px;
+  font-size: 14px;
+  letter-spacing: 1px;
+  text-align: justify;
+  word-break: break-all;
+}
+
+.common_h1{
+  color: $fontColor;
+  line-height: 60px;
+  font-size: 24px;
+  letter-spacing: 2px;
+  text-align: justify;
+  font-weight: bolder;
+}
+
+.common_h2{
+  color: $fontColor;
+  line-height: 30px;
+  font-size: 16px;
+  letter-spacing: 2px;
+  text-align: justify;
+  font-weight: bolder;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+input {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+select,
+input {
+  vertical-align: middle;
+}
+
+select,
+input,
+textarea {
+  font-size: 12px;
+  margin: 0;
+}
+
+
+/*禁止手动修改大小*/
+
+textarea {
+  resize: none;
+}
+
+
+/*去掉图片底部默认空白缝隙*/
+
+img {
+  border: 0;
+  vertical-align: middle;
+}
+
+/* 文字不选中 */
+.canNotSelectText {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/*合并外连线*/
+table {
+  /*表格的单元格边框默认是不会重合的，这个属性可以让表格的边框重合在一起，看起来更加细一些*/
+  border-collapse: collapse;
+  border-spacing: 0;
+  text-align: center;
+}
+
+html {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  font-family: Arial,Microsoft JhengHei;
+  background-color: $bg-color-thr !important;
+  width: 100%;
+  height: 100%;
+}
+
+
+/*清除浮动*/
+.clearfix:before,
+.clearfix:after {
+  content: "";
+  display: table;
+}
+.clearfix:after {
+  clear: both;
+}
+.clearfix {
+  clear: both;
+  *zoom: 1;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  text-decoration: none;
+  font-weight: normal;
+  font-size: 100%;
+}
+
+s,
+i,
+em {
+  font-style: normal;
+  text-decoration: none;
+}
+
+
+/*公共类*/
+.fl {
+  float: left;
+}
+
+.fr {
+  float: right;
+}
+
+.al {
+  text-align: left;
+}
+
+.ac {
+  text-align: center;
+}
+
+.ar {
+  text-align: right;
+}
+
+.pr {
+  position: relative;
+}
+
+.pa {
+  position: absolute;
+}
+
+.hide {
+  display: none;
+}
+
+/* 内容水平垂直居中 */
+.centerShow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  -ms-transform: translate(-50%, -50%);
+  -webkit-transform: translate(-50%, -50%);
+  -o-transform: translate(-50%, -50%);
+  -moz-transform: translate(-50%, -50%);
+}
+/*css初始化完成*/

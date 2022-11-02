@@ -1,0 +1,5 @@
+//px转换rem方法，用于响应式设置所有固定长度比例，px以iphone6比例截取长度
+@function px2rem($px) {
+  $rem: 32px;
+  @return floor($px / $rem * 10000) / 10000 + rem;
+}
