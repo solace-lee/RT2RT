@@ -1,4 +1,5 @@
 use wasm_bindgen::prelude::*;
+pub mod init_data;
 
 #[wasm_bindgen]
 pub fn fib(n: u32) -> u32 {

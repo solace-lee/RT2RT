@@ -1,11 +1,8 @@
 extern crate serde_json;
 
-use std::fs::File;
+use rt2rt::init_data::init_json::init_json;
 
 fn main() {
-    let f = File::open("./src/RT.json").unwrap();
-    let v: serde_json::Value = serde_json::from_reader(f).unwrap();
-    println!("{:?}", v["column"].as_str().unwrap());
-    println!("{:?}", v["row"].as_str().unwrap());
-    println!("Hello, world!");
+    let result = init_json::imageInfo::new("./src/RT.json");
+    println!("result{:?}", result.column);
 }
