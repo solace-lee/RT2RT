@@ -9,10 +9,10 @@ pub mod init_json {
 
     #[derive(Serialize, Deserialize, Debug)]
     pub struct ImageInfo {
-        pub column: u64,
-        pub row: u64,
+        pub column: u32,
+        pub row: u32,
         #[serde(rename = "layNum")]
-        pub lay_num: u64,
+        pub lay_num: u32,
         #[serde(rename = "rowPixelSpacing")]
         pub row_pixel_spacing: f64,
         #[serde(rename = "columnPixelSpacing")]
@@ -22,7 +22,7 @@ pub mod init_json {
         pub data: Vec<Vec<Vec<Cood>>>,
     }
 
-    #[derive(Serialize, Deserialize, Debug)]
+    #[derive(Serialize, Deserialize, Debug, Clone)]
     pub struct Cood {
         pub x: f64,
         pub y: f64,
