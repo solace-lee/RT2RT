@@ -1,4 +1,10 @@
 import rtData from './RT.json' assert { type: 'json' }
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __filenameNew = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filenameNew)
 
 // JS原生处理
 function main() {
@@ -18,7 +24,18 @@ function main() {
 
   console.log('像素坐标及边界', bound);
 
-
+  // 格式化成rust适合处理的数据格式
+  let x = []
+  for (let i = 0; i < layNum; i++) {
+    const element = `${i + 1}`;
+    if (rtData.data[element] && rtData.data[element]['edgeCoords']) {
+      x.push(rtData.data[element]['edgeCoords'])
+    } else {
+      x.push([])
+    }
+  }
+  rtData.data = x
+  fs.writeFileSync(path.resolve(__dirname, './RT_fmt.json'), JSON.stringify(rtData))
 }
 
 main()
