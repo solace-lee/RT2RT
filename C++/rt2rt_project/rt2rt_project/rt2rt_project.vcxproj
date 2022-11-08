@@ -102,7 +102,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;vtkDomainsChemistry_AUTOINIT_INCLUDE="D:/workspace/vtk-examples-build/CMakeFiles/vtkModuleAutoInit_7676ef1c2ca50d4ee71f02ba154b8737.h";vtkRenderingContext2D_AUTOINIT_INCLUDE="D:/workspace/vtk-examples-build/CMakeFiles/vtkModuleAutoInit_7676ef1c2ca50d4ee71f02ba154b8737.h";vtkRenderingCore_AUTOINIT_INCLUDE="D:/workspace/vtk-examples-build/CMakeFiles/vtkModuleAutoInit_7676ef1c2ca50d4ee71f02ba154b8737.h";vtkRenderingOpenGL2_AUTOINIT_INCLUDE="D:/workspace/vtk-examples-build/CMakeFiles/vtkModuleAutoInit_7676ef1c2ca50d4ee71f02ba154b8737.h";_CRT_FAR_MAPPINGS_NO_DEPRECATE;_CRT_IS_WCTYPE_NO_DEPRECATE;_CRT_MANAGED_FP_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_DEPRECATE_GLOBALS;_CRT_SETERRORMODE_BEEP_SLEEP_NO_DEPRECATE;_CRT_TIME_FUNCTIONS_NO_DEPRECATE;_CRT_VCCLRIT_NO_DEPRECATE;_SCL_SECURE_NO_DEPRECATE;kiss_fft_scalar=double;KISSFFT_DLL_IMPORT=1;CMAKE_INTDIR="Debug"</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>C:\Program Files %28x86%29\VTK\include\vtk-9.2;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>

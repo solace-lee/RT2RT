@@ -11,6 +11,10 @@
 #include <vtkRenderWindowInteractor.h>
 #include <vtkNew.h>
 #include <vtkInteractorStyleTrackballCamera.h>
+#include <vtkPolyLine.h>
+#include <vtkNamedColors.h>
+
+vtkNew< vtkNamedColors> colors;
 
 
 void Point2Pixel(int& px, int& py, const double x, const double y,
@@ -18,6 +22,49 @@ void Point2Pixel(int& px, int& py, const double x, const double y,
 {
 	px = x / rowPixelSpacing;
 	py = y / columnPixelSpacing;
+}
+
+
+
+void DrawMultiLine(vtkNew<vtkRenderer>& input_render,
+	const std::vector<std::tuple<int, int, int>>& input_points)
+{
+	vtkNew<vtkPoints> pointsForline;
+	for (auto& point : input_points)
+	{
+		pointsForline->InsertNextPoint(std::get<0>(point), 
+			std::get<1>(point), std::get<2>(point));
+	}
+	size_t points_count = input_points.size();
+	vtkNew<vtkPolyLine> polyLine;
+	polyLine->GetPointIds()->SetNumberOfIds(points_count);
+	for (unsigned int i = 0; i < points_count; i++)
+	{
+		polyLine->GetPointIds()->SetId(i, i);
+	}
+
+	// Create a cell array to store the lines in and add the lines to it
+	vtkNew<vtkCellArray> cells;
+	cells->InsertNextCell(polyLine);
+
+	// Create a polydata to store everything in
+	vtkNew<vtkPolyData> polyData;
+
+	// Add the points to the dataset
+	polyData->SetPoints(pointsForline);
+
+	// Add the lines to the dataset
+	polyData->SetLines(cells);
+
+	// Setup actor and mapper
+	vtkNew<vtkPolyDataMapper> mapper;
+	mapper->SetInputData(polyData);
+
+	vtkNew<vtkActor> actor;
+	actor->SetMapper(mapper);
+	actor->GetProperty()->SetColor(colors->GetColor3d("Tomato").GetData());
+	input_render->AddActor(actor);
+
 }
 
 int main(int argcount, char* argv[])
@@ -51,7 +98,7 @@ int main(int argcount, char* argv[])
 		"edgeCoords");
 	cJSON* points3_json = cJSON_GetArrayItem(edge_cords3, 0);
 	int points_size = cJSON_GetArraySize(points3_json);
-	std::vector<std::pair<int, int>> points_list;
+	std::vector<std::tuple<int, int, int>> points_list;
 	points_list.resize(points_size);
 	int px = 0;
 	int py = 0;
@@ -63,27 +110,9 @@ int main(int argcount, char* argv[])
 		temp_x = cJSON_GetNumberValue(cJSON_GetObjectItem(child_json, "x"));
 		temp_y = cJSON_GetNumberValue(cJSON_GetObjectItem(child_json, "y"));
 		Point2Pixel(px, py, temp_x, temp_y, rowPixelSpacing, columnPixelSpacing);
-		points_list[i] = std::make_pair(px, py);
+		points_list[i] = std::make_tuple(px, py, 0);
 	}
 
-
-	// Create two points, P0 and P1
-	double p0[3] = { 1.0, 0.0, 0.0 };
-	double p1[3] = { 0.0, 1.0, 0.0 };
-
-	vtkNew<vtkLineSource> lineSource;
-	lineSource->SetPoint1(p0);
-	lineSource->SetPoint2(p1);
-
-	// Visualize
-	vtkNew<vtkNamedColors> colors;
-
-	vtkNew<vtkPolyDataMapper> mapper;
-	mapper->SetInputConnection(lineSource->GetOutputPort());
-	vtkNew<vtkActor> actor;
-	actor->SetMapper(mapper);
-	actor->GetProperty()->SetLineWidth(4);
-	actor->GetProperty()->SetColor(colors->GetColor3d("Peacock").GetData());
 
 	vtkNew<vtkRenderer> renderer;
 	vtkNew<vtkRenderWindow> renderWindow;
@@ -93,7 +122,8 @@ int main(int argcount, char* argv[])
 	renderWindowInteractor->SetRenderWindow(renderWindow);
 
 	renderer->SetBackground(colors->GetColor3d("Silver").GetData());
-	renderer->AddActor(actor);
+
+	DrawMultiLine(renderer, points_list);
 
 	renderWindow->Render();
 	renderWindowInteractor->Start();
