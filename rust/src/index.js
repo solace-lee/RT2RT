@@ -19,10 +19,6 @@ function main() {
   const layerPx = zSize / layNum
   console.log(`一层图占用的像素数量：${layerPx}`);
 
-  const physicalArray = makeToArray(data)
-  const { data: pxData, bound } = physicalToPx(physicalArray, rowPixelSpacing, columnPixelSpacing)
-
-  console.log('像素坐标及边界', bound);
 
   // 格式化成rust适合处理的数据格式
   let x = []
@@ -34,8 +30,18 @@ function main() {
       x.push([])
     }
   }
-  rtData.data = x
-  fs.writeFileSync(path.resolve(__dirname, './RT_fmt.json'), JSON.stringify(rtData))
+  let obj = { ...rtData, data: x }
+  fs.writeFileSync(path.resolve(__dirname, './RT_fmt.json'), JSON.stringify(obj))
+
+
+  const physicalArray = makeToArray(data) // Map()
+  const { data: pxData, bound } = physicalToPx(physicalArray, rowPixelSpacing, columnPixelSpacing)
+
+  console.log('像素坐标及边界', bound);
+  fs.writeFileSync(path.resolve(__dirname, './RT_px_data.json'), JSON.stringify(pxData))
+
+
+
 }
 
 main()
@@ -62,7 +68,11 @@ function physicalToPx(data, rowPixelSpacing, columnPixelSpacing) {
       })
     })
   })
-  return { data, bound }
+  let obj = {}
+  data.forEach((value, key) => {
+    obj[key] = value
+  })
+  return { data: obj, bound }
 }
 
 // 格式化成数组

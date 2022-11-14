@@ -10,7 +10,7 @@ export class Contour {
             "attribute vec4 a_Position;" +
             "void main(){" +
             "   gl_Position = a_Position;" +
-            "   gl_PointSize = 5.0;" +
+            "   gl_PointSize = 1.0;" +
             "}";
         // 片源着色器程序
         const FSHADER_SOURCE =
