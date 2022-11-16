@@ -21,7 +21,8 @@ fn main() {
     println!("volume边界为：{:?}", volume_bounds);
 
     let rt_pxdata_and_bounds = get_rt_pxdata_and_bounds(&result);
-    println!("轮廓的边界为：{:?}", rt_pxdata_and_bounds.bounds);
+    println!("轮廓的边界为：{:#?}", rt_pxdata_and_bounds.bounds);
+    // println!("轮廓的边界为：{:#?}", rt_pxdata_and_bounds.data[1]);
 
     let closed_result = closed_line(rt_pxdata_and_bounds);
     println!("轮廓的边界为：{:#?}", closed_result.data);
