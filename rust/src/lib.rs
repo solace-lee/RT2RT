@@ -1,5 +1,6 @@
 use wasm_bindgen::prelude::*;
 pub mod init_data;
+pub mod pixel_processing;
 
 #[wasm_bindgen]
 pub fn fib(n: u32) -> u32 {
