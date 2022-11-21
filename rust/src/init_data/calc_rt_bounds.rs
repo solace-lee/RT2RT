@@ -85,14 +85,12 @@ pub fn get_rt_pxdata_and_bounds(imagainfo: &ImageInfo) -> PxData {
 
                         if bounds.max_x < x {
                             bounds.max_x = x
-                        }
-                        if bounds.min_x > x {
+                        } else if bounds.min_x > x {
                             bounds.min_x = x
                         }
                         if bounds.max_y < y {
                             bounds.max_y = y
-                        }
-                        if bounds.min_y > y {
+                        } else if bounds.min_y > y {
                             bounds.min_y = y
                         }
 

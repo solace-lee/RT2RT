@@ -1,5 +1,40 @@
 use crate::init_data::calc_rt_bounds::{PixelCoods, PxData};
 
+/// 验证生成的轮廓是否连续
+fn check_result(begin: usize, end: usize, coords: &Vec<PixelCoods>) -> bool {
+    if begin == end {
+        return true;
+    }
+    let mut pass = true;
+    let mut i = begin - 1;
+    let mut p_x = coords[i].x.abs();
+    let mut p_y = coords[i].y.abs();
+    loop {
+        let x = coords[i].x.abs();
+        let y = coords[i].y.abs();
+
+        if (p_x - x).abs() <= 1 {
+            p_x = x;
+        } else {
+            pass = false;
+            break;
+        }
+
+        if (p_y - y).abs() <= 1 {
+            p_y = y;
+        } else {
+            pass = false;
+            break;
+        }
+
+        if i == (end - 1) {
+            break;
+        }
+        i += 1;
+    }
+    return pass;
+}
+
 /// 像素插值（结果不包含second）
 fn insert_coord(first: &PixelCoods, second: &PixelCoods, result: &mut Vec<PixelCoods>) {
     if result.len() > 1 {
@@ -10,6 +45,7 @@ fn insert_coord(first: &PixelCoods, second: &PixelCoods, result: &mut Vec<PixelC
     } else {
         result.push(*first); // 放入第一个点
     }
+    let begin = result.len();
 
     let first_x = first.x;
     let first_y = first.y;
@@ -36,14 +72,14 @@ fn insert_coord(first: &PixelCoods, second: &PixelCoods, result: &mut Vec<PixelC
             y_step = 0;
             x_step = 0.0;
         } else {
-            y_step = sub_y / sub_y.abs(); // -1
-            x_step = sub_x as f32 / sub_y.abs() as f32; // 计算另一个方向上的步进分量 // -0.3636
+            y_step = sub_y / sub_y.abs();
+            x_step = sub_x as f32 / sub_y.abs() as f32; // 计算另一个方向上的步进分量
         }
 
-        for i in 1..sub_y.abs() { // 54
+        for i in 1..sub_y.abs() {
             // 按差异最大方向逐行补点
             let item = PixelCoods {
-                x: (first_x as f32 + (i as f32 * x_step)).round() as i32, // 4.0 + (1.0*-0.3636)
+                x: (first_x as f32 + (i as f32 * x_step)).round() as i32,
                 y: first_y + i * y_step,
             };
 
@@ -74,6 +110,12 @@ fn insert_coord(first: &PixelCoods, second: &PixelCoods, result: &mut Vec<PixelC
                 result.push(item)
             }
         }
+    }
+
+    let end = result.len();
+    let is_pass = check_result(begin, end, result);
+    if is_pass == false {
+        println!("两点间结果通过：{}", is_pass.to_string());
     }
 }
 
