@@ -1,4 +1,4 @@
-import rtData from './RT.json' assert { type: 'json' }
+import rtData from './json/RT.json' assert { type: 'json' }
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -31,14 +31,14 @@ function main() {
     }
   }
   let obj = { ...rtData, data: x }
-  fs.writeFileSync(path.resolve(__dirname, './RT_fmt.json'), JSON.stringify(obj))
+  fs.writeFileSync(path.resolve(__dirname, './json/RT_fmt.json'), JSON.stringify(obj))
 
 
   const physicalArray = makeToArray(data) // Map()
   const { data: pxData, bound } = physicalToPx(physicalArray, rowPixelSpacing, columnPixelSpacing)
 
   console.log('像素坐标及边界', bound);
-  fs.writeFileSync(path.resolve(__dirname, './RT_px_data.json'), JSON.stringify(pxData))
+  fs.writeFileSync(path.resolve(__dirname, './json/RT_px_data.json'), JSON.stringify(pxData))
 
 
 

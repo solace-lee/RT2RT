@@ -131,9 +131,6 @@ pub fn closed_line(pixel_data: PxData) -> PxData {
         let mut layer_result = Vec::new();
         if layer.len() != 0 {
             // 如果当前层存在轮廓数据
-            if line.data.len() == 2 {
-                break;
-            }
 
             for coords in layer {
                 let mut coords_result = Vec::new();

@@ -1,20 +1,23 @@
+use serde::{Deserialize, Serialize};
+
 use crate::init_data::init_json::ImageInfo;
 
 /// 轮廓像素坐标点结构定义
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct PixelCoods {
     pub x: i32,
     pub y: i32,
 }
 
 /// 轮廓像素坐标集合及边界
+#[derive(Debug, Serialize, Deserialize)]
 pub struct PxData {
     pub data: Vec<Vec<Vec<PixelCoods>>>,
     pub bounds: BoundsLimit,
 }
 
 ///轮廓像素边界定义
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct BoundsLimit {
     pub min_x: i32,
     pub max_x: i32,
