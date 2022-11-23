@@ -17,6 +17,7 @@ fn check_result(begin: usize, end: usize, coords: &Vec<PixelCoods>) -> bool {
             p_x = x;
         } else {
             pass = false;
+            eprintln!("X方向出现异常点,下标:{},上一个:{:#?}, 当前: {:#?}", i, p_x, x);
             break;
         }
 
@@ -24,6 +25,7 @@ fn check_result(begin: usize, end: usize, coords: &Vec<PixelCoods>) -> bool {
             p_y = y;
         } else {
             pass = false;
+            eprintln!("Y方向出现异常点,下标:{},上一个:{:#?}, 当前: {:#?}", i, p_y, y);
             break;
         }
 
@@ -115,7 +117,7 @@ fn insert_coord(first: &PixelCoods, second: &PixelCoods, result: &mut Vec<PixelC
     let end = result.len();
     let is_pass = check_result(begin, end, result);
     if is_pass == false {
-        println!("两点间结果通过：{}", is_pass.to_string());
+        println!("两点间结果不通过：{}", is_pass.to_string());
     }
 }
 
