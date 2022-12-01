@@ -17,7 +17,10 @@ fn check_result(begin: usize, end: usize, coords: &Vec<PixelCoods>) -> bool {
             p_x = x;
         } else {
             pass = false;
-            eprintln!("X方向出现异常点,下标:{},上一个:{:#?}, 当前: {:#?}", i, p_x, x);
+            eprintln!(
+                "X方向出现异常点,下标:{},上一个:{:#?}, 当前: {:#?}",
+                i, p_x, x
+            );
             break;
         }
 
@@ -25,7 +28,10 @@ fn check_result(begin: usize, end: usize, coords: &Vec<PixelCoods>) -> bool {
             p_y = y;
         } else {
             pass = false;
-            eprintln!("Y方向出现异常点,下标:{},上一个:{:#?}, 当前: {:#?}", i, p_y, y);
+            eprintln!(
+                "Y方向出现异常点,下标:{},上一个:{:#?}, 当前: {:#?}",
+                i, p_y, y
+            );
             break;
         }
 
@@ -38,7 +44,7 @@ fn check_result(begin: usize, end: usize, coords: &Vec<PixelCoods>) -> bool {
 }
 
 /// 像素插值（结果不包含second）
-fn insert_coord(first: &PixelCoods, second: &PixelCoods, result: &mut Vec<PixelCoods>) {
+fn insert_coord(first: &PixelCoods, second: &PixelCoods, result: &mut Vec<PixelCoods>) -> f32 {
     if result.len() > 1 {
         let last = result[result.len() - 1]; // 如果上一个点和这个点一样，则忽略
         if !(last.x == first.x && last.y == first.y) {
@@ -119,28 +125,32 @@ fn insert_coord(first: &PixelCoods, second: &PixelCoods, result: &mut Vec<PixelC
     if is_pass == false {
         println!("两点间结果不通过：{}", is_pass.to_string());
     }
+
+    (first_x as f32 * second_y as f32 - first_y as f32 * second_x as f32) / 2.0
 }
 
-/// 生成闭合曲线
+/// 生成闭合曲线（可按层用独立线程去计算）
 pub fn closed_line(pixel_data: PxData) -> PxData {
     let mut line = PxData {
         data: Vec::new(),
         bounds: pixel_data.bounds,
     };
     let PxData { data, .. } = pixel_data;
+    let mut layNum = 1;
 
     for layer in data {
         let mut layer_result = Vec::new();
         if layer.len() != 0 {
             // 如果当前层存在轮廓数据
-
             for coords in layer {
                 let mut coords_result = Vec::new();
                 if coords.len() != 0 {
                     // 如果当前轮廓有坐标数据
+                    let mut area = 0.0;
 
                     let mut i = 0;
                     loop {
+                        // 遍历一组轮廓
                         let mut next_index = i + 1;
                         if next_index == coords.len() {
                             next_index = 0
@@ -148,7 +158,9 @@ pub fn closed_line(pixel_data: PxData) -> PxData {
                         let first = &coords[i];
                         let second = &coords[next_index];
 
-                        insert_coord(first, second, &mut coords_result);
+                        // 将副产物面积计算出来
+                        let item_area = insert_coord(first, second, &mut coords_result);
+                        area += item_area;
 
                         if next_index == 0 {
                             break;
@@ -156,10 +168,14 @@ pub fn closed_line(pixel_data: PxData) -> PxData {
                             i += 1
                         }
                     }
+                    
+                    println!("该轮廓面积为：{}, 层：{}", area, layNum);
                 }
                 layer_result.push(coords_result)
             }
         }
+        layNum += 1;
+
         line.data.push(layer_result);
     }
 

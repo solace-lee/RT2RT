@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::init_data::init_json::ImageInfo;
+use crate::{init_data::init_json::ImageInfo, volume_tools::volume::volume::Bounds};
 
 /// 轮廓像素坐标点结构定义
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -23,14 +23,6 @@ pub struct BoundsLimit {
     pub max_x: i32,
     pub min_y: i32,
     pub max_y: i32,
-}
-
-///体边界定义
-#[derive(Debug)]
-pub struct Bounds {
-    pub x: u32,
-    pub y: u32,
-    pub z: u32,
 }
 
 ///寻找XYZ的最小像素间距
