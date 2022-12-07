@@ -14,7 +14,7 @@ pub mod volume {
     #[derive(Clone, Debug)]
     pub struct Volume {
         // pub data: Vec<Vec<u8>>, // 512*512*388的初始化性能比Vec<u128>慢10倍左右
-        pub data: Vec<u128>,
+        pub data: Vec<u128>, // 每2位标识一个轮廓，高位表方向，低位表是否有轮廓，01表示逆时针，11表示顺时针
         pub bounds: Bounds,
         pub name_map: Vec<String>,
     }

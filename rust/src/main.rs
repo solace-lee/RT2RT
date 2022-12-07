@@ -1,5 +1,6 @@
 extern crate serde_json;
 
+use rt2rt::init_data::calc_rt_bounds::PixelCoods;
 use rt2rt::pixel_processing::line_processing::closed_line;
 use rt2rt::volume_tools::volume::volume;
 use rt2rt::{
@@ -33,8 +34,17 @@ fn main() {
     let rt_pxdata_and_bounds = get_rt_pxdata_and_bounds(&result);
     println!("轮廓的边界为：{:#?}", rt_pxdata_and_bounds.bounds);
 
+    // 计算XY的偏移量
+    let mut translation = PixelCoods { x: 0, y: 0 };
+    if rt_pxdata_and_bounds.bounds.min_x < 0 {
+        translation.x = rt_pxdata_and_bounds.bounds.min_x.abs();
+    }
+    if rt_pxdata_and_bounds.bounds.min_y < 0 {
+        translation.y = rt_pxdata_and_bounds.bounds.min_y.abs();
+    }
+
     // 生成闭合轮廓
-    let closed_result = closed_line(rt_pxdata_and_bounds);
+    let closed_result = closed_line(rt_pxdata_and_bounds, translation);
     // println!("闭合轮廓为：{:#?}", closed_result.data);
 
     // 将闭合轮廓存入本地

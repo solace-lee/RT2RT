@@ -44,14 +44,25 @@ fn check_result(begin: usize, end: usize, coords: &Vec<PixelCoods>) -> bool {
 }
 
 /// 像素插值（结果不包含second）
-fn insert_coord(first: &PixelCoods, second: &PixelCoods, result: &mut Vec<PixelCoods>) -> f32 {
+fn insert_coord(
+    first: &PixelCoods,
+    second: &PixelCoods,
+    result: &mut Vec<PixelCoods>,
+    translation: PixelCoods,
+) -> f32 {
     if result.len() > 1 {
         let last = result[result.len() - 1]; // 如果上一个点和这个点一样，则忽略
         if !(last.x == first.x && last.y == first.y) {
-            result.push(*first);
+            result.push(PixelCoods {
+                x: first.x + translation.x,
+                y: first.y + translation.y,
+            });
         }
     } else {
-        result.push(*first); // 放入第一个点
+        result.push(PixelCoods {
+            x: first.x + translation.x,
+            y: first.y + translation.y,
+        }); // 放入第一个点
     }
     let begin = result.len();
 
@@ -93,7 +104,10 @@ fn insert_coord(first: &PixelCoods, second: &PixelCoods, result: &mut Vec<PixelC
 
             let last = result[result.len() - 1]; // 如果上一个点和这个点一样，则忽略
             if !(last.x == item.x && last.y == item.y) {
-                result.push(item)
+                result.push(PixelCoods {
+                    x: item.x + translation.x,
+                    y: item.y + translation.y,
+                })
             }
         }
     } else {
@@ -115,7 +129,10 @@ fn insert_coord(first: &PixelCoods, second: &PixelCoods, result: &mut Vec<PixelC
 
             let last = result[result.len() - 1];
             if !(last.x == item.x && last.y == item.y) {
-                result.push(item)
+                result.push(PixelCoods {
+                    x: item.x + translation.x,
+                    y: item.y + translation.y,
+                })
             }
         }
     }
@@ -130,7 +147,7 @@ fn insert_coord(first: &PixelCoods, second: &PixelCoods, result: &mut Vec<PixelC
 }
 
 /// 生成闭合曲线（可按层用独立线程去计算）
-pub fn closed_line(pixel_data: PxData) -> PxData {
+pub fn closed_line(pixel_data: PxData, translation: PixelCoods) -> PxData {
     let mut line = PxData {
         data: Vec::new(),
         bounds: pixel_data.bounds,
@@ -159,7 +176,8 @@ pub fn closed_line(pixel_data: PxData) -> PxData {
                         let second = &coords[next_index];
 
                         // 将副产物面积计算出来
-                        let item_area = insert_coord(first, second, &mut coords_result);
+                        let item_area =
+                            insert_coord(first, second, &mut coords_result, translation);
                         area += item_area;
 
                         if next_index == 0 {
@@ -168,7 +186,7 @@ pub fn closed_line(pixel_data: PxData) -> PxData {
                             i += 1
                         }
                     }
-                    
+
                     println!("该轮廓面积为：{}, 层：{}", area, layNum);
                 }
                 layer_result.push(coords_result)
