@@ -153,7 +153,7 @@ pub fn closed_line(pixel_data: PxData, translation: PixelCoods) -> PxData {
         bounds: pixel_data.bounds,
     };
     let PxData { data, .. } = pixel_data;
-    let mut layNum = 1;
+    let mut lay_num = 1;
 
     for layer in data {
         let mut layer_result = Vec::new();
@@ -187,12 +187,12 @@ pub fn closed_line(pixel_data: PxData, translation: PixelCoods) -> PxData {
                         }
                     }
 
-                    println!("该轮廓面积为：{}, 层：{}", area, layNum);
+                    println!("该轮廓面积为：{}, 层：{}", area, lay_num);
                 }
                 layer_result.push(coords_result)
             }
         }
-        layNum += 1;
+        lay_num += 1;
 
         line.data.push(layer_result);
     }

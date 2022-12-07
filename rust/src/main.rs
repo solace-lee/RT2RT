@@ -1,11 +1,12 @@
 extern crate serde_json;
 
-use rt2rt::init_data::calc_rt_bounds::PixelCoods;
 use rt2rt::pixel_processing::line_processing::closed_line;
 use rt2rt::volume_tools::volume::volume;
 use rt2rt::{
     init_data::{
-        calc_rt_bounds::{find_pixel_spacing, get_rt_pxdata_and_bounds, get_volume_bounds},
+        calc_rt_bounds::{
+            find_pixel_spacing, get_rt_pxdata_and_bounds, get_volume_bounds, PixelCoods,
+        },
         init_json,
     },
     output_json::output::output,
