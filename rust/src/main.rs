@@ -51,14 +51,6 @@ fn main() {
     // 将闭合轮廓存入本地
     // output(&closed_result, "./json/closed_result.json");
 
-    // 将轮廓坐标系转换成图像坐标系,假设轮廓的0点是图像的中心点，即：256，256，194
-
-    // [{body: 1, eye: 0}, {body: 0, eye: 1},
-    // {body: 0, eye: 1}, {body: 0, eye: 1}]
-
-    // (1, 1):{body: 0, eye: 1}
-    // (1, 0):{body: 0, eye: 1}
-
     // 初始化体数据空间
     let volume = volume::Volume::new(volume_bounds);
     println!("体实例：{:#?}", volume.name_map)

@@ -4,6 +4,8 @@ pub mod volume {
         pub x: u32,
         pub y: u32,
         pub z: u32,
+        // pub pos_level: Vec<u32>,
+        // pub level_pos: Vec<(u32, u32, u32)>,
     }
 
     pub struct Position {
