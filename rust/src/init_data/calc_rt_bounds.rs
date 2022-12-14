@@ -26,26 +26,23 @@ pub struct BoundsLimit {
 }
 
 ///寻找XYZ的最小像素间距
-pub fn find_pixel_spacing(arr: Vec<f64>) -> f64 {
-    let min = arr.iter().min_by(|x, y| x.partial_cmp(y).unwrap()).unwrap();
-    *min
-}
+// pub fn find_pixel_spacing(arr: Vec<f64>) -> f64 {
+//     let min = arr.iter().min_by(|x, y| x.partial_cmp(y).unwrap()).unwrap();
+//     *min
+// }
 
 ///计算volume的边界
-pub fn get_volume_bounds(imagainfo: &ImageInfo, minpx: &f64) -> Bounds {
+pub fn get_volume_bounds(imagainfo: &ImageInfo) -> Bounds {
     let ImageInfo {
         column,
         row,
         lay_num,
-        row_pixel_spacing,
-        column_pixel_spacing,
-        thickness,
         ..
     } = imagainfo;
     Bounds {
-        x: (row_pixel_spacing / minpx * *row as f64).ceil() as u32,
-        y: (column_pixel_spacing / minpx * *column as f64).ceil() as u32,
-        z: (thickness * *lay_num as f64 / minpx).ceil() as u32,
+        x: *column,
+        y: *row,
+        z: *lay_num,
     }
 }
 

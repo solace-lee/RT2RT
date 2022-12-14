@@ -4,9 +4,7 @@ use rt2rt::pixel_processing::line_processing::closed_line;
 use rt2rt::volume_tools::volume::volume;
 use rt2rt::{
     init_data::{
-        calc_rt_bounds::{
-            find_pixel_spacing, get_rt_pxdata_and_bounds, get_volume_bounds, PixelCoods,
-        },
+        calc_rt_bounds::{get_rt_pxdata_and_bounds, get_volume_bounds, PixelCoods},
         init_json,
     },
     output_json::output::output,
@@ -17,18 +15,18 @@ fn main() {
     let result = init_json::ImageInfo::new("./json/RT_fmt.json").expect("出现错误");
 
     // 获取最小的像素间距
-    let min_spacing = find_pixel_spacing(vec![
-        result.row_pixel_spacing,
-        result.column_pixel_spacing,
-        result.thickness,
-    ]);
-    println!(
-        "寻找最小的像素间距:{}, 层厚：{}",
-        min_spacing, result.thickness
-    );
+    // let min_spacing = find_pixel_spacing(vec![
+    //     result.row_pixel_spacing,
+    //     result.column_pixel_spacing,
+    //     result.thickness,
+    // ]);
+    // println!(
+    //     "寻找最小的像素间距:{}, 层厚：{}",
+    //     min_spacing, result.thickness
+    // );
 
     // 获取体数据的边界
-    let volume_bounds = get_volume_bounds(&result, &min_spacing);
+    let volume_bounds = get_volume_bounds(&result);
     println!("volume边界为：{:?}", volume_bounds);
 
     // 物理坐标转像素坐标，并寻找边界
@@ -44,21 +42,21 @@ fn main() {
         translation.y = rt_pxdata_and_bounds.bounds.min_y.abs();
     }
 
-    // 生成闭合轮廓
-    let closed_result = closed_line(rt_pxdata_and_bounds, translation);
-    // println!("闭合轮廓为：{:#?}", closed_result.data);
-
-    // 将闭合轮廓存入本地
-    // output(&closed_result, "./json/closed_result.json");
-
     // 初始化体数据空间
     let volume = volume::Volume::new(volume_bounds);
-    println!("体实例：{:#?}", volume.name_map)
+    println!("体实例：{:#?}", volume.bounds);
+
+    // 生成闭合轮廓
+    let closed_result = closed_line(rt_pxdata_and_bounds, translation, &volume);
+    // println!("闭合轮廓为：{:#?}", &volume_data.get_layer_data(3));
+
+    // 将闭合轮廓存入本地
+    output(&volume.get_layer_data(5), "./json/closed_result.json");
 
     // 建立层数和Z轴坐标的映射关系（TODO：）
 
     // 将轮廓放入体数据中
-    // init_volume(volume_bounds);
+    // set_data(volume_bounds);
 
     // 逐行扫描生成实心轮廓的体数据
 

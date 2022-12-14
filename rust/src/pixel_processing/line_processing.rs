@@ -1,4 +1,7 @@
-use crate::init_data::calc_rt_bounds::{PixelCoods, PxData};
+use crate::{
+    init_data::calc_rt_bounds::{PixelCoods, PxData},
+    volume_tools::volume::{self, volume::Volume},
+};
 
 /// 验证生成的轮廓是否连续
 fn check_result(begin: usize, end: usize, coords: &Vec<PixelCoods>) -> bool {
@@ -147,7 +150,7 @@ fn insert_coord(
 }
 
 /// 生成闭合曲线（可按层用独立线程去计算）
-pub fn closed_line(pixel_data: PxData, translation: PixelCoods) -> PxData {
+pub fn closed_line(pixel_data: PxData, translation: PixelCoods, volume: &Volume) -> PxData {
     let mut line = PxData {
         data: Vec::new(),
         bounds: pixel_data.bounds,
@@ -155,46 +158,63 @@ pub fn closed_line(pixel_data: PxData, translation: PixelCoods) -> PxData {
     let PxData { data, .. } = pixel_data;
     let mut lay_num = 1;
 
-    for layer in data {
-        let mut layer_result = Vec::new();
-        if layer.len() != 0 {
-            // 如果当前层存在轮廓数据
-            for coords in layer {
-                let mut coords_result = Vec::new();
-                if coords.len() != 0 {
-                    // 如果当前轮廓有坐标数据
-                    let mut area = 0.0;
+    for layer_num in 0..data.len() {
+        if let Some(layer) = data.get(layer_num) {
+            let mut layer_result = Vec::new();
+            if layer.len() != 0 {
+                // 如果当前层存在轮廓数据
+                for coords in layer {
+                    let mut coords_result = Vec::new();
+                    if coords.len() != 0 {
+                        // 如果当前轮廓有坐标数据
+                        let mut area = 0.0;
 
-                    let mut i = 0;
-                    loop {
                         // 遍历一组轮廓
-                        let mut next_index = i + 1;
-                        if next_index == coords.len() {
-                            next_index = 0
-                        }
-                        let first = &coords[i];
-                        let second = &coords[next_index];
+                        for i in 0..coords.len() {
+                            let mut next_index = i + 1;
+                            if next_index == coords.len() {
+                                next_index = 0
+                            }
 
-                        // 将副产物面积计算出来
-                        let item_area =
-                            insert_coord(first, second, &mut coords_result, translation);
-                        area += item_area;
+                            let first = &coords[i];
+                            let second = &coords[next_index];
 
-                        if next_index == 0 {
-                            break;
-                        } else {
-                            i += 1
+                            // 将副产物面积计算出来
+                            let item_area =
+                                insert_coord(first, second, &mut coords_result, translation);
+                            area += item_area;
                         }
+
+                        // 遍历数据存入volume
+                        for coord in 0..coords_result.len() {
+                            if let Some(coord) = coords_result.get(coord) {
+                                // println!("存入数据");
+                                if area < 0.0 {
+                                    volume.set_pixel(
+                                        coord.x as u32,
+                                        coord.y as u32,
+                                        layer_num as u32,
+                                        1,
+                                    ); // 小于0，逆时针，正方向
+                                } else {
+                                    volume.set_pixel(
+                                        coord.x as u32,
+                                        coord.y as u32,
+                                        layer_num as u32,
+                                        3,
+                                    );
+                                }
+                            }
+                        }
+                        println!("该轮廓面积为：{}, 层：{}", area, lay_num);
                     }
-
-                    println!("该轮廓面积为：{}, 层：{}", area, lay_num);
+                    layer_result.push(coords_result)
                 }
-                layer_result.push(coords_result)
             }
-        }
-        lay_num += 1;
+            lay_num += 1;
 
-        line.data.push(layer_result);
+            line.data.push(layer_result);
+        }
     }
 
     return line;

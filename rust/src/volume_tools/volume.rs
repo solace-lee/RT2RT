@@ -1,11 +1,13 @@
 pub mod volume {
+    use std::cell::RefCell;
+
+
     #[derive(Clone, Debug)]
     pub struct Bounds {
         pub x: u32,
         pub y: u32,
         pub z: u32,
-        // pub pos_level: Vec<u32>,
-        // pub level_pos: Vec<(u32, u32, u32)>,
+        // pub z_pixel_spacing: f32,
     }
 
     pub struct Position {
@@ -16,7 +18,7 @@ pub mod volume {
     #[derive(Clone, Debug)]
     pub struct Volume {
         // pub data: Vec<Vec<u8>>, // 512*512*388的初始化性能比Vec<u128>慢10倍左右
-        pub data: Vec<u128>, // 每2位标识一个轮廓，高位表方向，低位表是否有轮廓，01表示逆时针，11表示顺时针
+        pub data: RefCell<Vec<u128>>, // 每2位标识一个轮廓，高位表方向，低位表是否有轮廓，01表示逆时针，11表示顺时针
         pub bounds: Bounds,
         pub name_map: Vec<String>,
     }
@@ -24,7 +26,7 @@ pub mod volume {
     impl Volume {
         pub fn new(bounds: Bounds) -> Volume {
             let volume_str = Volume {
-                data: vec![0; (bounds.x * bounds.y * bounds.z) as usize],
+                data: RefCell::new(vec![0; (bounds.x * bounds.y * bounds.z) as usize]),
                 bounds,
                 name_map: Vec::new(),
             };
@@ -32,11 +34,11 @@ pub mod volume {
         }
 
         /// 修改坐标值
-        pub fn set_pixel(&mut self, x: u32, y: u32, z: u32, value: u128) -> bool {
+        pub fn set_pixel(&self, x: u32, y: u32, z: u32, value: u128) -> bool {
             if x > self.bounds.x || y > self.bounds.y || z > self.bounds.z {
                 return false;
             }
-            self.data[(z * self.bounds.x * self.bounds.y + y * self.bounds.y + x) as usize] = value;
+            self.data.borrow_mut()[(z * self.bounds.x * self.bounds.y + y * self.bounds.x + x) as usize] = value;
             return true;
         }
 
@@ -47,7 +49,7 @@ pub mod volume {
 
             let mut i = begin;
             loop {
-                data.push(self.data[i as usize]);
+                data.push(self.data.borrow()[i as usize]);
                 i += 1;
                 if i == end {
                     break;
