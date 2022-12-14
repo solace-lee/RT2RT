@@ -1,7 +1,6 @@
 pub mod volume {
     use std::cell::RefCell;
 
-
     #[derive(Clone, Debug)]
     pub struct Bounds {
         pub x: u32,
@@ -33,12 +32,30 @@ pub mod volume {
             return volume_str;
         }
 
+        // 构建实心volume
+        pub fn build_volume(&self, rs_index: u8) {
+            for layer in 0..self.bounds.z {
+                let Position { begin, .. } = self.get_layer_position(layer);
+                for row in 0..self.bounds.y {
+                    let row_begin = begin + row * self.bounds.x;
+                    // 逐行扫描
+                    for column in 0..self.bounds.x {
+                        let data_index = row_begin + column;
+                        let item_value = self.data.borrow()[data_index as usize];
+                        // 扫描的可能是极值点，也可能是中间点
+                        
+                    }
+                }
+            }
+        }
+
         /// 修改坐标值
         pub fn set_pixel(&self, x: u32, y: u32, z: u32, value: u128) -> bool {
             if x > self.bounds.x || y > self.bounds.y || z > self.bounds.z {
                 return false;
             }
-            self.data.borrow_mut()[(z * self.bounds.x * self.bounds.y + y * self.bounds.x + x) as usize] = value;
+            self.data.borrow_mut()
+                [(z * self.bounds.x * self.bounds.y + y * self.bounds.x + x) as usize] = value;
             return true;
         }
 
