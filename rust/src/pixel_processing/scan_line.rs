@@ -37,6 +37,7 @@ pub fn scan_line(rs: PxData) {
         let aet = init_net(layer, item_bounds);
         let result = process_scan_line_fill(aet, item_bounds);
         // result.push(Vec::new());
+        println!("第{}层, 共{}层", index, data.len())
     }
 }
 
@@ -136,8 +137,9 @@ fn process_scan_line_fill(AET { sl_net, lines }: AET, item_bounds: &BoundsLimit)
     };
 
     let remove = |y: i32| {
-        let next_edge_clone = Rc::clone(&next_edge);
-        let mut current_edge = RefCell::borrow_mut(&next_edge_clone);
+        // let next_edge_clone = Rc::clone(&next_edge);
+        // let mut current_edge = RefCell::borrow_mut(&next_edge_clone);
+        let mut current_edge = next_edge.borrow_mut();
         let mut pre = current_edge.head;
 
         while current_edge.head != -1
@@ -230,27 +232,34 @@ fn process_scan_line_fill(AET { sl_net, lines }: AET, item_bounds: &BoundsLimit)
         insert(index);
         // println!("Next表：{:?}", next_edge.borrow().next);
         // 输出结果
-        let current_edge = next_edge.borrow();
-        let mut i = current_edge.head;
-        loop {
-            if i == -1 {
-                break;
-            };
-            if current_edge.next[i as usize] != -1 {
-                println!(
-                    "连线{:?}, {:?}",
-                    PixelCoods {
-                        x: lines.borrow()[i as usize].xi as i32,
-                        y
-                    },
-                    PixelCoods {
-                        x: lines.borrow()[current_edge.next[i as usize] as usize].xi as i32,
-                        y
-                    }
-                );
+        {
+            let current_edge = next_edge.borrow();
+            let mut i = current_edge.head;
+            loop {
+                if i == -1 {
+                    break;
+                };
+                if current_edge.next[i as usize] != -1 {
+                    // println!(
+                    //     "连线{:?}, {:?}",
+                    //     PixelCoods {
+                    //         x: lines.borrow()[i as usize].xi as i32,
+                    //         y
+                    //     },
+                    //     PixelCoods {
+                    //         x: lines.borrow()[current_edge.next[i as usize] as usize].xi as i32,
+                    //         y
+                    //     }
+                    // );
+                }
+                if current_edge.next[i as usize] == -1 {
+                    break;
+                }
+                // println!("下标溢出了？{:?},{:?}", current_edge.next[current_edge.next[i as usize] as usize], index);
+                i = current_edge.next[current_edge.next[i as usize] as usize];
             }
-            i = current_edge.next[current_edge.next[i as usize] as usize] as isize;
         }
+        // println!("换层了{:?}", item_bounds.max_y - item_bounds.min_y);
 
         // 删除非活动边
         remove(index);
