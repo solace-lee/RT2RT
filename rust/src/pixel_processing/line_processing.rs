@@ -146,6 +146,7 @@ fn insert_coord(
         println!("两点间结果不通过：{}", is_pass.to_string());
     }
 
+    // 计算面积并返回
     (first_x as f32 * second_y as f32 - first_y as f32 * second_x as f32) / 2.0
 }
 
@@ -154,6 +155,7 @@ pub fn closed_line(pixel_data: PxData, translation: PixelCoods, volume: &Volume)
     let mut line = PxData {
         data: Vec::new(),
         bounds: pixel_data.bounds,
+        layer_bounds: Vec::new(),
     };
     let PxData { data, .. } = pixel_data;
     let mut lay_num = 1;

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>扫描线填充</title>
+  <!-- <script src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js"></script> -->
+</head>
+
+<body>
+
+  <h1>Scan-Line Filling</h1>
+  <!-- <h2>请点击屏幕画点，系统会自动为您连线</h2> -->
+  <div>
+    <button id="beginFill" onclick="Fill()">开始填充</button>
+    <button id="goBackToPreStep" onclick="Clear()">清空画布</button>
+  </div>
+  <div>
+    <canvas id="myCanvas" width="1200" height="800" style="border: 1px solid  #000000;"></canvas>
+  </div>
+  <script type="text/javascript">
+    //类的定义及函数实现在最下面
+    const canvas = document.getElementById('myCanvas');
+    var ctx = canvas.getContext("2d");
+    ctx.lineWidth = 1;
+
+    var isRight = true;
+    var ymin = 0;
+    var ymax = 1200;
+
+    var Points = new Array();//存储点
+    Points.push({ x: 200, y: 200 })
+    // Points.push({ x: 400, y: 100 })
+    Points.push({ x: 500, y: 100 })
+    Points.push({ x: 1100, y: 300 })
+    Points.push({ x: 1100, y: 800 })
+    Points.push({ x: 500, y: 500 })
+    Points.push({ x: 200, y: 700 })
+    Points.push({ x: 200, y: 200 })
+
+    // Points.push({ x: 2, y: 2 })
+    // Points.push({ x: 2, y: 7 })
+    // Points.push({ x: 5, y: 5 })
+    // Points.push({ x: 11, y: 8 })
+    // Points.push({ x: 11, y: 3 })
+    // Points.push({ x: 5, y: 1 })
+    // Points.push({ x: 2, y: 2 })
+    var Points_count = Points.length - 1;
+
+    var Lines = new Array(); // 把所有的边打个标号放入（活动边表）
+    var Lines_count = 0;
+
+    var next = new Array(); // Lines[next[i]]:即为下一条边
+    var head = -1; // 活动边表的头
+
+    const resultCoord = []
+
+
+    canvas.addEventListener("click", function (e) {//定义点击事件
+      if (isRight == true) {//在没有点击Fill之前可以绘点
+        var tempPoint = new Point();
+        tempPoint.x = e.offsetX;
+        tempPoint.y = e.offsetY;
+        if (tempPoint.y > ymax) {
+          ymax = tempPoint.y;
+        }
+        if (tempPoint.y < ymin) {
+          ymin = tempPoint.y;
+        }
+
+        Points[Points_count] = tempPoint;
+        if (Points_count >= 1) {//连边
+          ctx.strokeStyle = "red";
+          ctx.beginPath();
+          ctx.moveTo(Points[Points_count - 1].x, Points[Points_count - 1].y);
+          ctx.lineTo(Points[Points_count].x, Points[Points_count].y);
+          ctx.closePath();
+          ctx.stroke();
+        }
+        Points_count++;
+      }
+
+    }, false);
+
+    /*-------绘制函数：点击button时候执行-------*/
+    function Fill() {
+      /*-----------Fill----------*/
+      //将最后一个点和第一个点相连
+      isRight = false;
+      // ctx.beginPath();
+      // ctx.moveTo(Points[0].x, Points[0].y);
+      // ctx.lineTo(Points[Points_count - 1].x, Points[Points_count - 1].y);
+      // ctx.closePath();
+      // ctx.stroke();
+      //定义一个新边表（NET）
+      var slNet = new Array(ymax - ymin + 1);
+      for (var i = 0; i < slNet.length; i++)
+        slNet[i] = [];//生成二维数组
+      //初始化新边表
+      InitNET();
+      //进行扫描线填充
+      ProcessScanLineFill();
+      /*-----------END----------*/
+
+
+      /*以下为Fill()中所需的函数*/
+      //初始化新边表
+      function InitNET() {
+        for (var i = 0; i < Points_count; i++) {
+
+          var e = new tagEdge();
+          e.id = Lines_count++;
+          e.isIn = false;
+
+          var L_start = Points[i];//边的第一个顶点
+          var L_end = Points[(i + 1) % Points_count];//边的第二个顶点
+          var L_start_pre = Points[(i - 1 + Points_count) % Points_count];//第一个顶点前面的点
+          var L_end_next = Points[(i + 2) % Points_count];//第二个顶点后面的点
+          if (L_end.y != L_start.y) {//跳过水平线
+            e.dx = (L_end.x - L_start.x) / (L_end.y - L_start.y);//1/k
+            if (L_end.y > L_start.y) { // 开始点为下端点
+              e.xi = L_start.x; // xi 置为下端点的X坐标
+              if (L_end_next.y >= L_end.y) { // 上端点的下一个点的Y更大
+                e.ymax = L_end.y - 1; // ymax置为上端点所在行 - 1
+              } else e.ymax = L_end.y; // 否则设置成上端点的Y
+
+              slNet[L_start.y - ymin].push(e); // 以下端点归类
+              // console.log(slNet[L_start.y - ymin].length, L_start.y - ymin);
+            } else {
+              e.xi = L_end.x;
+              if (L_start_pre.y >= L_start.y) {
+                e.ymax = L_start.y - 1;
+              } else e.ymax = L_start.y;
+
+              slNet[L_end.y - ymin].push(e);
+              // console.log(slNet[L_end.y - ymin].length, L_end.y - ymin);
+            }
+            console.log(JSON.stringify(e));
+            Lines.push(e);
+          } else {
+            Lines.push(new tagEdge());
+          }
+        }
+        var tp = new tagEdge();//javascript中不允许数组为空，因此这里填入一个空边
+        for (var i = 0; i < slNet.length; i++) {
+          slNet[i].push(tp);
+        }
+
+      }
+      function ProcessScanLineFill() {
+        //初始化活动边表的信息
+        head = -1;
+        for (var i = 0; i < Lines.length; i++) {
+          next[i] = -1; // 初始化next
+        }
+
+        /*----开始扫描线算法---*/
+        for (var y = ymin; y <= ymax; y++) {
+
+          insert(y - ymin); // 寻找经过改行的所有边
+          console.log(next.toString(), head, y - ymin, '(next, head, y)');
+          for (var i = head; i != -1; i = next[next[i]]) {//绘制该扫描线
+            if (next[i] != -1) {
+
+              if ((y - ymin) == 6) {
+                console.log({ x: Lines[i].xi, y }, i)
+                console.log({ x: Lines[next[i]].xi, y })
+              }
+              if ((y - ymin) % 4 === 0) {
+                ctx.beginPath();
+                ctx.strokeStyle = "green"
+                ctx.moveTo(Lines[i].xi, y);
+                ctx.lineTo(Lines[next[i]].xi, y);
+                ctx.stroke();
+              }
+
+
+            }
+          }
+          remove(y);//删除非活动边
+          update_AET(); // 更新活动边表中每项的xi值(下端点)，并根据xi重新排序
+        }
+        // ctx.closePath();
+        /*----END扫描线算法---*/
+
+
+        /*----扫描线算法所需的函数---*/
+        // 删除非活动边
+        function remove(y) {
+          var pre = head; // 前一条边置为head
+          // 剔除在当前行结束的边
+          while (head != -1 && Lines[head].ymax == y) { // 前一条边存在，且前一条边的上端点在当前行
+            Lines[head].isIn = false;
+            head = next[head]; // head置为下一条边
+            next[pre] = -1; // 将next表中的上一条变置为-1（空）
+            pre = head; // pre置为下一条边，继续循环
+          }
+          // 如果head没有对应的边跳出
+          if (head == -1) return;
+
+          var nxt = next[head]; // 找到当前边的下一条边
+          for (var i = nxt; i != -1; i = nxt) { // 下一条边存在时
+            nxt = next[i]; // nxt置为下下条边
+            if (Lines[i].ymax == y) { // 如果下一条边的上端点在当前行
+              next[pre] = next[i]; // head的下一条边指向下下条边
+              Lines[i].isIn = false;
+              next[i] = -1; // 下下条边置为-1(空)
+            } else pre = i; // 将head的下一条边赋值给当前
+          }
+        }
+
+        //更新活动边表中每项的xi值，并根据xi重新排序
+        function update_AET() {
+          for (var i = head; i != -1; i = next[i]) { // 当前扫描行是否有线
+            Lines[i].xi += Lines[i].dx; // 更新当前扫描行所有经过线的x坐标
+          }
+          //按照冒泡排序的思想O(n)重新排序
+          if (head == -1) return; // 没有线
+          if (next[head] == -1) return; // 只有一条线
+          var pre = head;
+          if (Lines[head].xi > Lines[next[head]].xi) { // 如果第一条线的x坐标大于下一条线
+            head = next[head]; // 下一条线作为第一条
+            next[pre] = next[head]; // 原本的第一条的下一条=原本的下下条
+            next[head] = pre; // 原本的下一条变成第一条
+            pre = head; // 更新pre
+          }
+          var j = next[head]; // head的下一条
+          for (var i = j; i != -1; i = j) {
+            j = next[i]; // head的下下条
+            if (j == -1) break; // 不存在跳出循环
+            if (Lines[i].xi > Lines[next[i]].xi) { // head的下一条x大于head下下条的x
+              next[pre] = next[i]; // 下一条和下下条互换（j=j.next）
+              next[i] = next[next[i]]; // j.next = j.next.next
+              next[j] = i; // j.next = j
+            } else pre = i;
+          }
+        }
+
+        //将扫描线对应的所有新边插入到AET中
+        function insert(y) {
+          for (var i = 0; i < slNet[y].length; i++) {
+            var temp = slNet[y][i];
+
+            if (temp.ymax == 0 && temp.dx == 0) break;
+
+            console.log(y, JSON.stringify(temp));
+
+            if (head == -1) {
+              head = temp.id; // 4
+            } else {
+              if (temp.xi < Lines[head].xi) { // 当前边下端点的X坐标<上一条边的下端点X
+                next[temp.id] = head; // 将下一条边的地址改成上一条边
+                head = temp.id;
+              } else {
+                var pre = head; // 当前线不能排到head的前面，那证明head的线在前面
+                for (var j = next[head]; ; j = next[j]) { // head的下一条线，j = head的下下条线
+                  if (j == -1 || temp.xi < Lines[j].xi) { // head的下一条线不存在，或者当前线在head的下一条线前面
+                    next[pre] = temp.id; // head的下一条线=当前的线
+                    next[temp.id] = j; // 当前的线的下一条就是原来head的下一条
+                    break;
+                  }
+                  pre = j; // -1
+                }
+              }
+            }
+            // console.log(y, next.toString());
+            temp.isIn = true;
+          }
+        }
+
+      }
+
+    }
+    /*-------清空画布-------*/
+    function Clear() {
+      canvas.height = canvas.height//重新定义高度清空画布
+      ctx.lineWidth = 1;//线的宽度
+
+      isRight = true;
+      ymin = 10000;
+      ymax = 0;
+
+      Points.splice(0, Points.length);
+      Points_count = 0;
+      Lines.splice(0, Lines.length);
+      Lines_count = 0;
+    }
+    /*-----类的定义--------*/
+    function Point() {
+      this.x = 0;
+      this.y = 0;
+    }
+    function tagEdge() {
+      this.xi = 0; // 下端点的X坐标
+      this.dx = 0;//  1/k
+      this.ymax = 0; // 上端点的Y坐标
+      this.id = 0; // 第几条边
+      this.isIn = false;
+    }
+
+  </script>
+
+</body>
+
+</html>

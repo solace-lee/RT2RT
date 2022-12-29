@@ -1,6 +1,8 @@
 pub mod volume {
     use std::cell::RefCell;
 
+    use crate::init_data::calc_rt_bounds::PxData;
+
     #[derive(Clone, Debug)]
     pub struct Bounds {
         pub x: u32,

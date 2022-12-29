@@ -14,10 +14,11 @@ pub struct PixelCoods {
 pub struct PxData {
     pub data: Vec<Vec<Vec<PixelCoods>>>,
     pub bounds: BoundsLimit,
+    pub layer_bounds: Vec<BoundsLimit>,
 }
 
 ///轮廓像素边界定义
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
 pub struct BoundsLimit {
     pub min_x: i32,
     pub max_x: i32,
@@ -65,8 +66,19 @@ pub fn get_rt_pxdata_and_bounds(imagainfo: &ImageInfo) -> PxData {
         max_y: 0,
     };
 
-    for i in data {
+    let mut layer_bounds: Vec<BoundsLimit> = Vec::new();
+
+    for index in 0..data.len() {
+        let i = &data[index];
         let mut o = Vec::new();
+
+        // 单层的轮廓范围
+        let mut item_bounds = BoundsLimit {
+            min_x: 0,
+            max_x: 0,
+            min_y: 0,
+            max_y: 0,
+        };
         if i.len() != 0 {
             for j in i {
                 let mut p = Vec::new();
@@ -75,15 +87,15 @@ pub fn get_rt_pxdata_and_bounds(imagainfo: &ImageInfo) -> PxData {
                         let x = (k.x / row_pixel_spacing).ceil() as i32;
                         let y = (k.y / column_pixel_spacing).ceil() as i32;
 
-                        if bounds.max_x < x {
-                            bounds.max_x = x
-                        } else if bounds.min_x > x {
-                            bounds.min_x = x
+                        if item_bounds.max_x < x {
+                            item_bounds.max_x = x
+                        } else if item_bounds.min_x > x {
+                            item_bounds.min_x = x
                         }
-                        if bounds.max_y < y {
-                            bounds.max_y = y
-                        } else if bounds.min_y > y {
-                            bounds.min_y = y
+                        if item_bounds.max_y < y {
+                            item_bounds.max_y = y
+                        } else if item_bounds.min_y > y {
+                            item_bounds.min_y = y
                         }
 
                         p.push(PixelCoods { x, y });
@@ -92,11 +104,25 @@ pub fn get_rt_pxdata_and_bounds(imagainfo: &ImageInfo) -> PxData {
                 o.push(p);
             }
         };
+        // 存储单层的轮廓范围
+        layer_bounds.push(item_bounds);
+
+        if bounds.max_x < item_bounds.max_x {
+            bounds.max_x = item_bounds.max_x
+        } else if bounds.min_x > item_bounds.min_x {
+            bounds.min_x = item_bounds.min_x
+        }
+        if bounds.max_y < item_bounds.max_y {
+            bounds.max_y = item_bounds.max_y
+        } else if bounds.min_y > item_bounds.min_y {
+            bounds.min_y = item_bounds.min_y
+        }
         result.push(o);
     }
 
     PxData {
         data: result,
         bounds,
+        layer_bounds,
     }
 }
