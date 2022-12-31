@@ -20,7 +20,7 @@ pub struct AET {
     lines: Rc<RefCell<Vec<TagEdge>>>,
 }
 
-pub fn scan_line(rs: PxData) {
+pub fn scan_line(rs: PxData) -> Vec<Vec<PixelCoods>> {
     let PxData {
         data,
         // bounds,
@@ -28,17 +28,18 @@ pub fn scan_line(rs: PxData) {
         ..
     } = rs;
 
-    let mut result: Vec<Vec<Vec<PixelCoods>>> = Vec::new();
+    let mut result: Vec<Vec<PixelCoods>> = Vec::new();
     for index in 0..data.len() {
         let layer = &data[index];
         let item_bounds = &layer_bounds[index];
 
         // 归档活动边表
         let aet = init_net(layer, item_bounds);
-        let result = process_scan_line_fill(aet, item_bounds);
-        // result.push(Vec::new());
-        println!("第{}层, 共{}层", index, data.len())
+        let line_result = process_scan_line_fill(aet, item_bounds);
+        result.push(line_result);
+        // println!("第{}层, 共{}层", index, data.len())
     }
+    return result;
 }
 
 // 初始化新边表
@@ -47,8 +48,6 @@ fn init_net(layer_coords: &Vec<Vec<PixelCoods>>, item_bounds: &BoundsLimit) -> A
         sl_net: vec![Vec::new(); (item_bounds.max_y - item_bounds.min_y) as usize],
         lines: Rc::new(RefCell::new(Vec::new())),
     };
-    // let next: Vec<isize> = Vec::new();
-    // let head: isize = -1;
     let mut count = 0;
     for i in 0..layer_coords.len() {
         // 单个轮廓(同层)
@@ -90,18 +89,19 @@ fn init_net(layer_coords: &Vec<Vec<PixelCoods>>, item_bounds: &BoundsLimit) -> A
         }
     }
 
-    // println!("活动边表：{:?}, {:?}", aet.sl_net, aet.lines);
-
     return aet;
 }
 
-fn process_scan_line_fill(AET { sl_net, lines }: AET, item_bounds: &BoundsLimit) {
+fn process_scan_line_fill(
+    AET { sl_net, lines }: AET,
+    item_bounds: &BoundsLimit,
+) -> Vec<PixelCoods> {
     let next_edge = Rc::new(RefCell::new(NextEdge {
         next: vec![-1; lines.borrow().len()],
         head: -1,
     }));
-    // let mut next: Vec<isize> = vec![-1; lines.len()];
-    // let mut head: isize = -1;
+
+    let mut line_result: Vec<PixelCoods> = Vec::new();
 
     let insert = |y: i32| {
         for i in 0..sl_net[y as usize].len() {
@@ -230,7 +230,6 @@ fn process_scan_line_fill(AET { sl_net, lines }: AET, item_bounds: &BoundsLimit)
         let index = y - item_bounds.min_y;
         // 闭包
         insert(index);
-        // println!("Next表：{:?}", next_edge.borrow().next);
         // 输出结果
         {
             let current_edge = next_edge.borrow();
@@ -240,6 +239,14 @@ fn process_scan_line_fill(AET { sl_net, lines }: AET, item_bounds: &BoundsLimit)
                     break;
                 };
                 if current_edge.next[i as usize] != -1 {
+                    line_result.push(PixelCoods {
+                        x: lines.borrow()[i as usize].xi as i32,
+                        y,
+                    });
+                    line_result.push(PixelCoods {
+                        x: lines.borrow()[current_edge.next[i as usize] as usize].xi as i32,
+                        y,
+                    });
                     // println!(
                     //     "连线{:?}, {:?}",
                     //     PixelCoods {
@@ -255,14 +262,14 @@ fn process_scan_line_fill(AET { sl_net, lines }: AET, item_bounds: &BoundsLimit)
                 if current_edge.next[i as usize] == -1 {
                     break;
                 }
-                // println!("下标溢出了？{:?},{:?}", current_edge.next[current_edge.next[i as usize] as usize], index);
                 i = current_edge.next[current_edge.next[i as usize] as usize];
             }
         }
-        // println!("换层了{:?}", item_bounds.max_y - item_bounds.min_y);
 
         // 删除非活动边
-        remove(index);
+        remove(y);
         update_aet();
     }
+
+    return line_result;
 }

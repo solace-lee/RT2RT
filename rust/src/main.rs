@@ -32,10 +32,11 @@ fn main() {
 
     // 物理坐标转像素坐标，并寻找边界
     let rt_pxdata_and_bounds = get_rt_pxdata_and_bounds(&result);
-    println!("轮廓的边界为：{:#?}", rt_pxdata_and_bounds.bounds);
+    // println!("轮廓的边界为：{:#?}", rt_pxdata_and_bounds.data[1]);
+    // println!("轮廓的layer_bounds：{:#?}", rt_pxdata_and_bounds.layer_bounds[1]);
 
-    let line_volume = scan_line(rt_pxdata_and_bounds);
-    // output(&rt_pxdata_and_bounds, "./json/closed_result.json");
+    let line_result = scan_line(rt_pxdata_and_bounds);
+    output(&line_result, "./json/line_result.json");
 
     return;
 

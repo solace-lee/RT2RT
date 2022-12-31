@@ -69,6 +69,7 @@ pub fn get_rt_pxdata_and_bounds(imagainfo: &ImageInfo) -> PxData {
     let mut layer_bounds: Vec<BoundsLimit> = Vec::new();
 
     for index in 0..data.len() {
+        // for index in 0..2 {
         let i = &data[index];
         let mut o = Vec::new();
 
