@@ -1,6 +1,6 @@
 extern crate serde_json;
 
-use rt2rt::pixel_processing::line_processing::closed_line;
+// use rt2rt::pixel_processing::line_processing::closed_line;
 use rt2rt::pixel_processing::scan_line::scan_line;
 use rt2rt::volume_tools::volume::volume;
 use rt2rt::{
@@ -38,31 +38,24 @@ fn main() {
     let line_result = scan_line(rt_pxdata_and_bounds);
     output(&line_result, "./json/line_result.json");
 
-    return;
 
     // 计算XY的偏移量
-    let mut translation = PixelCoods { x: 0, y: 0 };
-    if rt_pxdata_and_bounds.bounds.min_x < 0 {
-        translation.x = rt_pxdata_and_bounds.bounds.min_x.abs();
-    }
-    if rt_pxdata_and_bounds.bounds.min_y < 0 {
-        translation.y = rt_pxdata_and_bounds.bounds.min_y.abs();
-    }
+    // let mut translation = PixelCoods { x: 0, y: 0 };
+    // if rt_pxdata_and_bounds.bounds.min_x < 0 {
+    //     translation.x = rt_pxdata_and_bounds.bounds.min_x.abs();
+    // }
+    // if rt_pxdata_and_bounds.bounds.min_y < 0 {
+    //     translation.y = rt_pxdata_and_bounds.bounds.min_y.abs();
+    // }
 
     // 初始化体数据空间
-    let volume = volume::Volume::new(volume_bounds);
-    println!("体实例：{:#?}", volume.bounds);
+    // let volume = volume::Volume::new(volume_bounds);
+    // println!("体实例：{:#?}", volume.bounds);
 
     // 生成闭合轮廓
     // 将轮廓放入体数据中
-    let closed_result = closed_line(rt_pxdata_and_bounds, translation, &volume);
+    // let closed_result = closed_line(rt_pxdata_and_bounds, translation, &volume);
     // println!("闭合轮廓为：{:#?}", &volume_data.get_layer_data(3));
-
-    // 将闭合轮廓存入本地
-
-    // 建立层数和Z轴坐标的映射关系（TODO：）
-
-    // 逐行扫描生成实心轮廓的体数据
 
     // 截取矢状面各层像素数据
 

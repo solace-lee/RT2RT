@@ -20,7 +20,7 @@ pub struct AET {
     lines: Rc<RefCell<Vec<TagEdge>>>,
 }
 
-pub fn scan_line(rs: PxData) -> Vec<Vec<PixelCoods>> {
+pub fn scan_line(rs: PxData) -> Vec<Vec<i32>> {
     let PxData {
         data,
         // bounds,
@@ -28,7 +28,7 @@ pub fn scan_line(rs: PxData) -> Vec<Vec<PixelCoods>> {
         ..
     } = rs;
 
-    let mut result: Vec<Vec<PixelCoods>> = Vec::new();
+    let mut result: Vec<Vec<i32>> = Vec::new();
     for index in 0..data.len() {
         let layer = &data[index];
         let item_bounds = &layer_bounds[index];
@@ -95,13 +95,13 @@ fn init_net(layer_coords: &Vec<Vec<PixelCoods>>, item_bounds: &BoundsLimit) -> A
 fn process_scan_line_fill(
     AET { sl_net, lines }: AET,
     item_bounds: &BoundsLimit,
-) -> Vec<PixelCoods> {
+) -> Vec<i32> {
     let next_edge = Rc::new(RefCell::new(NextEdge {
         next: vec![-1; lines.borrow().len()],
         head: -1,
     }));
 
-    let mut line_result: Vec<PixelCoods> = Vec::new();
+    let mut line_result: Vec<i32> = Vec::new();
 
     let insert = |y: i32| {
         for i in 0..sl_net[y as usize].len() {
@@ -239,25 +239,13 @@ fn process_scan_line_fill(
                     break;
                 };
                 if current_edge.next[i as usize] != -1 {
-                    line_result.push(PixelCoods {
-                        x: lines.borrow()[i as usize].xi as i32,
-                        y,
-                    });
-                    line_result.push(PixelCoods {
-                        x: lines.borrow()[current_edge.next[i as usize] as usize].xi as i32,
-                        y,
-                    });
-                    // println!(
-                    //     "连线{:?}, {:?}",
-                    //     PixelCoods {
-                    //         x: lines.borrow()[i as usize].xi as i32,
-                    //         y
-                    //     },
-                    //     PixelCoods {
-                    //         x: lines.borrow()[current_edge.next[i as usize] as usize].xi as i32,
-                    //         y
-                    //     }
-                    // );
+                    // x: first
+                    line_result.push(lines.borrow()[i as usize].xi as i32);
+                    // x: second
+                    line_result
+                        .push(lines.borrow()[current_edge.next[i as usize] as usize].xi as i32);
+                    // y
+                    line_result.push(y);
                 }
                 if current_edge.next[i as usize] == -1 {
                     break;
