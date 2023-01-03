@@ -84,9 +84,11 @@ pub fn get_rt_pxdata_and_bounds(imagainfo: &ImageInfo) -> PxData {
             for j in i {
                 let mut p = Vec::new();
                 if j.len() != 0 {
-                    for k in j {
-                        let x = (k.x / row_pixel_spacing).ceil() as i32;
-                        let y = (k.y / column_pixel_spacing).ceil() as i32;
+                    for k in 0..(j.len() / 2) {
+                        let kx = j[k * 2];
+                        let ky = j[k * 2 + 1];
+                        let x = (kx / row_pixel_spacing).ceil() as i32;
+                        let y = (ky / column_pixel_spacing).ceil() as i32;
 
                         if item_bounds.max_x < x {
                             item_bounds.max_x = x
@@ -100,6 +102,8 @@ pub fn get_rt_pxdata_and_bounds(imagainfo: &ImageInfo) -> PxData {
                         }
 
                         p.push(PixelCoods { x, y });
+                        // p.push(x);
+                        // p.push(y);
                     }
                 };
                 o.push(p);

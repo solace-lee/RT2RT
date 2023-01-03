@@ -17,7 +17,7 @@ pub struct ImageInfo {
     pub column_pixel_spacing: f64,
     pub thickness: f64,
     // #[serde(flatten)]
-    pub data: Vec<Vec<Vec<Cood>>>,
+    pub data: Vec<Vec<Vec<f64>>>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

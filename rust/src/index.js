@@ -1,4 +1,4 @@
-import rtData from './json/RT.json' assert { type: 'json' }
+import rtData from '../json/RT.json' assert { type: 'json' }
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -25,20 +25,27 @@ function main() {
   for (let i = 0; i < layNum; i++) {
     const element = `${i + 1}`;
     if (rtData.data[element] && rtData.data[element]['edgeCoords']) {
-      x.push(rtData.data[element]['edgeCoords'])
+      x.push(rtData.data[element]['edgeCoords'].map(v => {
+        const coordArr = []
+        v.forEach(item => { // 铺平坐标数据
+          coordArr.push(item.x)
+          coordArr.push(item.y)
+        })
+        return coordArr
+      }))
     } else {
       x.push([])
     }
   }
   let obj = { ...rtData, data: x }
-  fs.writeFileSync(path.resolve(__dirname, './json/RT_fmt.json'), JSON.stringify(obj))
+  fs.writeFileSync(path.resolve(__dirname, '../json/RT_fmt.json'), JSON.stringify(obj))
 
 
-  const physicalArray = makeToArray(data) // Map()
-  const { data: pxData, bound } = physicalToPx(physicalArray, rowPixelSpacing, columnPixelSpacing)
+  // const physicalArray = makeToArray(data) // Map()
+  // const { data: pxData, bound } = physicalToPx(physicalArray, rowPixelSpacing, columnPixelSpacing)
 
-  console.log('像素坐标及边界', bound);
-  fs.writeFileSync(path.resolve(__dirname, './json/RT_px_data.json'), JSON.stringify(pxData))
+  // console.log('像素坐标及边界', bound);
+  // fs.writeFileSync(path.resolve(__dirname, './json/RT_px_data.json'), JSON.stringify(pxData))
 
 
 
