@@ -17,7 +17,7 @@ pub struct NextEdge {
 
 pub struct AET {
     sl_net: Vec<Vec<TagEdge>>,
-    lines: Rc<RefCell<Vec<TagEdge>>>,
+    lines: RefCell<Vec<TagEdge>>,
 }
 
 pub fn scan_line(rs: PxData) -> Vec<Vec<i32>> {
@@ -46,7 +46,7 @@ pub fn scan_line(rs: PxData) -> Vec<Vec<i32>> {
 fn init_net(layer_coords: &Vec<Vec<PixelCoods>>, item_bounds: &BoundsLimit) -> AET {
     let mut aet = AET {
         sl_net: vec![Vec::new(); (item_bounds.max_y - item_bounds.min_y) as usize],
-        lines: Rc::new(RefCell::new(Vec::new())),
+        lines: RefCell::new(Vec::new()),
     };
     let mut count = 0;
     for i in 0..layer_coords.len() {
@@ -96,10 +96,10 @@ fn process_scan_line_fill(
     AET { sl_net, lines }: AET,
     item_bounds: &BoundsLimit,
 ) -> Vec<i32> {
-    let next_edge = Rc::new(RefCell::new(NextEdge {
+    let next_edge = RefCell::new(NextEdge {
         next: vec![-1; lines.borrow().len()],
         head: -1,
-    }));
+    });
 
     let mut line_result: Vec<i32> = Vec::new();
 
