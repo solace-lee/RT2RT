@@ -9,6 +9,8 @@ pub mod volume {
         pub y: u32,
         pub z: u32,
         // pub z_pixel_spacing: f32,
+        pub x_layer: f64,
+        pub y_layer: f64
     }
 
     pub struct Position {

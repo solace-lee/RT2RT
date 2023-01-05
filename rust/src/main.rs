@@ -1,5 +1,8 @@
 extern crate serde_json;
 
+use std::time::SystemTime;
+
+use rt2rt::pixel_processing::build_xy_rt::build_xy_rt;
 // use rt2rt::pixel_processing::line_processing::closed_line;
 use rt2rt::pixel_processing::scan_line::scan_line;
 use rt2rt::volume_tools::volume::volume;
@@ -35,18 +38,15 @@ fn main() {
     // println!("轮廓的边界为：{:#?}", rt_pxdata_and_bounds.data[1]);
     // println!("轮廓的layer_bounds：{:#?}", rt_pxdata_and_bounds.layer_bounds[1]);
 
+    let sys_time1 = SystemTime::now();
     let line_result = scan_line(rt_pxdata_and_bounds);
+    let sys_time2 = SystemTime::now();
+
+    println!("扫描线算法耗时：{:?}", sys_time2.duration_since(sys_time1).expect("时间倒转了"));
+
     output(&line_result, "./json/line_result.json");
 
-
-    // 计算XY的偏移量
-    // let mut translation = PixelCoods { x: 0, y: 0 };
-    // if rt_pxdata_and_bounds.bounds.min_x < 0 {
-    //     translation.x = rt_pxdata_and_bounds.bounds.min_x.abs();
-    // }
-    // if rt_pxdata_and_bounds.bounds.min_y < 0 {
-    //     translation.y = rt_pxdata_and_bounds.bounds.min_y.abs();
-    // }
+    build_xy_rt(line_result, volume_bounds);
 
     // 初始化体数据空间
     // let volume = volume::Volume::new(volume_bounds);

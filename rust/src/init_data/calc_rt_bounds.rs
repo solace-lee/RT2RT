@@ -38,12 +38,17 @@ pub fn get_volume_bounds(imagainfo: &ImageInfo) -> Bounds {
         column,
         row,
         lay_num,
+        thickness,
+        row_pixel_spacing,
+        column_pixel_spacing,
         ..
     } = imagainfo;
     Bounds {
-        x: *column,
-        y: *row,
-        z: *lay_num,
+        x: *column, // x轴像素
+        y: *row, // y轴像素
+        z: *lay_num, // z轴像素
+        x_layer: thickness / row_pixel_spacing, // x轴 像素/层
+        y_layer: thickness / column_pixel_spacing, // y轴 像素/ 层
     }
 }
 
