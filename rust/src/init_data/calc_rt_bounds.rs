@@ -41,6 +41,7 @@ pub fn get_volume_bounds(imagainfo: &ImageInfo) -> Bounds {
         thickness,
         row_pixel_spacing,
         column_pixel_spacing,
+        image_position_patient,
         ..
     } = imagainfo;
     Bounds {

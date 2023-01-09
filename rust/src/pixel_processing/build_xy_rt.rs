@@ -40,7 +40,7 @@ pub fn build_xy_rt(line: Vec<Vec<i32>>, bounds: Bounds) {
             let x_slice_end_position = ((*line_x_end as f64 / x_layer.round()).ceil()) as isize;
 
             for x_slice_layer in x_slice_begin_position..x_slice_end_position {}
-            result.x_rt
+            // result.x_rt
         }
     }
 }

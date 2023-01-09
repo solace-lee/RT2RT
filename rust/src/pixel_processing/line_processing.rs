@@ -1,6 +1,6 @@
 use crate::{
     init_data::calc_rt_bounds::{PixelCoods, PxData},
-    volume_tools::volume::{self, volume::Volume},
+    volume_tools::volume::{volume::Volume},
 };
 
 /// 验证生成的轮廓是否连续

@@ -16,6 +16,8 @@ pub struct ImageInfo {
     #[serde(rename = "columnPixelSpacing")]
     pub column_pixel_spacing: f64,
     pub thickness: f64,
+    #[serde(rename = "imagePositionPatient")]
+    pub image_position_patient: Vec<f64>,
     // #[serde(flatten)]
     pub data: Vec<Vec<Vec<f64>>>,
 }
