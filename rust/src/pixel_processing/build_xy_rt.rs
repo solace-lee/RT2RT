@@ -1,4 +1,5 @@
-use crate::volume_tools::volume::volume::Bounds;
+use crate::init_data::calc_rt_bounds::Bounds;
+
 
 pub struct RTResult {
     pub x_rt: Vec<Vec<i32>>,
@@ -12,6 +13,7 @@ pub fn build_xy_rt(line: Vec<Vec<i32>>, bounds: Bounds) {
         z,
         x_layer, // x轴 像素/层
         y_layer, // y轴 像素/ 层
+        ..
     } = bounds;
     let x_layer_num = (x as f64 / x_layer.round()).ceil();
     let y_layer_num = (y as f64 / y_layer.round()).ceil();

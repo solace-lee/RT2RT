@@ -35,14 +35,17 @@ fn main() {
 
     // 物理坐标转像素坐标，并寻找边界
     let rt_pxdata_and_bounds = get_rt_pxdata_and_bounds(&result);
-    // println!("轮廓的边界为：{:#?}", rt_pxdata_and_bounds.data[1]);
+    println!("轮廓的边界为：{:#?}", rt_pxdata_and_bounds.bounds);
     // println!("轮廓的layer_bounds：{:#?}", rt_pxdata_and_bounds.layer_bounds[1]);
 
     let sys_time1 = SystemTime::now();
     let line_result = scan_line(rt_pxdata_and_bounds);
     let sys_time2 = SystemTime::now();
 
-    println!("扫描线算法耗时：{:?}", sys_time2.duration_since(sys_time1).expect("时间倒转了"));
+    println!(
+        "扫描线算法耗时：{:?}",
+        sys_time2.duration_since(sys_time1).expect("时间倒转了")
+    );
 
     output(&line_result, "./json/line_result.json");
 

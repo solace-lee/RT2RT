@@ -14,3 +14,13 @@ pub mod volume_tools;
 //     let line_result = scan_line(n);
 //     return line_result;
 // }
+
+#[wasm_bindgen]
+pub fn fib() -> i32 {
+    let mut result = Vec::new();
+    for i in 0..1000000 {
+        result.push(i * 2)
+    }
+
+    return result[1];
+}

@@ -1,6 +1,17 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{init_data::init_json::ImageInfo, volume_tools::volume::volume::Bounds};
+use crate::init_data::init_json::ImageInfo;
+
+#[derive(Clone, Debug)]
+pub struct Bounds {
+    pub x: u32,
+    pub y: u32,
+    pub z: u32,
+    // pub z_pixel_spacing: f32,
+    pub x_layer: f64,
+    pub y_layer: f64,
+    pub px_position_patient: Vec<i64>,
+}
 
 /// 轮廓像素坐标点结构定义
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -44,12 +55,25 @@ pub fn get_volume_bounds(imagainfo: &ImageInfo) -> Bounds {
         image_position_patient,
         ..
     } = imagainfo;
+
+    // 用于存储图像原点的像素坐标
+    let mut px_position_patient = Vec::new();
+
+    for i in 0..(image_position_patient.len() / 3) {
+        let x = image_position_patient[i * 3];
+        let y = image_position_patient[i * 3 + 1];
+        let z = image_position_patient[i * 3 + 2];
+        px_position_patient.push((x / row_pixel_spacing).ceil() as i64);
+        px_position_patient.push((y / column_pixel_spacing).ceil() as i64);
+        px_position_patient.push(z.ceil() as i64);
+    }
     Bounds {
-        x: *column, // x轴像素
-        y: *row, // y轴像素
-        z: *lay_num, // z轴像素
-        x_layer: thickness / row_pixel_spacing, // x轴 像素/层
+        x: *column,                                // x轴像素
+        y: *row,                                   // y轴像素
+        z: *lay_num,                               // z轴像素
+        x_layer: thickness / row_pixel_spacing,    // x轴 像素/层
         y_layer: thickness / column_pixel_spacing, // y轴 像素/ 层
+        px_position_patient,                       // 图像原点
     }
 }
 

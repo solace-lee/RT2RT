@@ -40,7 +40,9 @@ const __dirname = path.dirname(__filenameNew)
 
 fs.readFile(path.join(__dirname, "../pkg/rt2rt_bg.wasm"), (err, data) => {
   WebAssembly.instantiate(data).then((module) => {
-    console.log(module.instance.exports.fib(6), '4444');
+    console.time('wasm一百万次耗时');
+    console.log(module.instance.exports.fib(), '4444');
+    console.timeEnd('wasm一百万次耗时');
   }).catch(err => {
     console.log(err);
   })
