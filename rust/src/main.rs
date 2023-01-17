@@ -49,8 +49,9 @@ fn main() {
 
     output(&line_result, "./json/line_result.json");
 
-    build_xy_rt(line_result, volume_bounds);
+    let rt_build_result = build_xy_rt(line_result, volume_bounds);
 
+    output(&rt_build_result, "./json/rt_build_result.json");
     // 初始化体数据空间
     // let volume = volume::Volume::new(volume_bounds);
     // println!("体实例：{:#?}", volume.bounds);
