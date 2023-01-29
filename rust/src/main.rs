@@ -2,7 +2,7 @@ extern crate serde_json;
 
 use std::time::SystemTime;
 
-use rt2rt::pixel_processing::build_xy_rt::build_xy_rt;
+use rt2rt::pixel_processing::build_xy_rt::{build_xy_rt, generate_mask};
 // use rt2rt::pixel_processing::line_processing::closed_line;
 use rt2rt::pixel_processing::scan_line::scan_line;
 use rt2rt::volume_tools::volume::volume;
@@ -49,7 +49,7 @@ fn main() {
 
     output(&line_result, "./json/line_result.json");
 
-    let rt_build_result = build_xy_rt(line_result, volume_bounds);
+    let rt_build_result = generate_mask(line_result, volume_bounds);
 
     output(&rt_build_result, "./json/rt_build_result.json");
     // 初始化体数据空间
