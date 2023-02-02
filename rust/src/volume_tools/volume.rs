@@ -1,7 +1,7 @@
 pub mod volume {
     use std::cell::RefCell;
 
-    use crate::init_data::calc_rt_bounds::{PxData, Bounds};
+    use crate::init_data::calc_rt_bounds::Bounds;
 
     
 
@@ -26,23 +26,6 @@ pub mod volume {
                 name_map: Vec::new(),
             };
             return volume_str;
-        }
-
-        // 构建实心volume
-        pub fn build_volume(&self, rs_index: u8) {
-            for layer in 0..self.bounds.z {
-                let Position { begin, .. } = self.get_layer_position(layer);
-                for row in 0..self.bounds.y {
-                    let row_begin = begin + row * self.bounds.x;
-                    // 逐行扫描
-                    for column in 0..self.bounds.x {
-                        let data_index = row_begin + column;
-                        let item_value = self.data.borrow()[data_index as usize];
-                        // 扫描的可能是极值点，也可能是中间点
-                        
-                    }
-                }
-            }
         }
 
         /// 修改坐标值

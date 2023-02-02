@@ -3,6 +3,8 @@
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import rtdata from '../json/RT_fmt.json' assert { type: 'json' }
+import fib from '../pkg/rt2rt_bg.js'
 
 // 调用wasm处理
 
@@ -17,7 +19,7 @@ import { fileURLToPath } from 'url'
 //     initial: 256
 //   }),
 //   table: new WebAssembly.Table({
-//     initial: 2,
+//     initial: 2, 
 //     element: 'anyfunc'
 //   }),
 //   abort: () => {
@@ -34,6 +36,7 @@ import { fileURLToPath } from 'url'
 //     console.log(err);
 //   })
 
+console.log(fib);
 
 const __filenameNew = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filenameNew)
@@ -41,7 +44,8 @@ const __dirname = path.dirname(__filenameNew)
 fs.readFile(path.join(__dirname, "../pkg/rt2rt_bg.wasm"), (err, data) => {
   WebAssembly.instantiate(data).then((module) => {
     console.time('wasm一百万次耗时');
-    console.log(module.instance.exports.fib(45), '4444');
+    console.log(module.instance.exports.rt2rt(rtdata), '4444');
+    // console.log(module.instance.exports.fib(rtdata), '4444');
     console.timeEnd('wasm一百万次耗时');
   }).catch(err => {
     console.log(err);
