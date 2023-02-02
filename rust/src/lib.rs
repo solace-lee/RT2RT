@@ -1,6 +1,9 @@
+use init_data::calc_rt_bounds::{get_rt_pxdata_and_bounds, get_volume_bounds};
+use init_data::init_json::ImageInfo;
+use pixel_processing::build_xy_rt::{generate_mask, mask_to_rt};
+use pixel_processing::magic_wand::Contours;
+use pixel_processing::scan_line::scan_line;
 use serde::{Deserialize, Serialize};
-// use init_data::init_json::ImageInfo;
-// use init_data::calc_rt_bounds::PixelCoods;
 // use pixel_processing::scan_line::scan_line;
 use wasm_bindgen::prelude::*;
 extern crate serde_json;
@@ -32,19 +35,7 @@ pub struct Person {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct ImageInfo {
-    pub column: u32,
-    pub row: u32,
-    pub lay_num: u32,
-    pub row_pixel_spacing: f64,
-    pub column_pixel_spacing: f64,
-    pub thickness: f64,
-    pub zm_obj_array: ObjArray,
-    pub zm_data: Vec<Vec<u32>>,
-    pub zm_data_obj: Vec<Person>,
-    // pub image_position_patient: Vec<f64>,
-    // pub data: Box<Vec<Vec<f64>>>,
-}
+pub struct Result(Vec<Vec<Contours>>);
 
 // #[macro_use]
 // extern crate serde_derive;
@@ -56,32 +47,24 @@ extern "C" {
 }
 
 #[wasm_bindgen]
-pub fn getObj (val: JsValue) -> JsValue {
-    let mut res: ImageInfo = serde_wasm_bindgen::from_value(val).unwrap();
-    let firstData: u32 = res.zm_obj_array.data[0] * 2;
-    let mut person = Person {
-        name: String::from("FEA_Dven"),
-        age: 20,
-    };
-    let new_array = vec![1, 2, 3];
-    let two_array = vec![4, 5, 6];
-    let mut i = 0;
-    while i < 2 {
-        let person = Person {
-            name: String::from("FEA_Dven"),
-            age: 20 + i,
-        };
-        res.zm_data_obj.push(person);
-        i += 1
-    }
-    res.zm_obj_array.data.push(firstData);
-    res.zm_data.push(new_array);
-    res.zm_data.push(two_array);
-    serde_wasm_bindgen::to_value(&res).unwrap()
+pub fn handleData(val: JsValue) -> JsValue {
+    let params: ImageInfo = serde_wasm_bindgen::from_value(val).unwrap();
+    // 获取体数据的边界
+    let volume_bounds = get_volume_bounds(&params);
+    // 物理坐标转像素坐标，并寻找边界
+    let rt_pxdata_and_bounds = get_rt_pxdata_and_bounds(&params);
+    // 扫描线算法
+    let line_result = scan_line(rt_pxdata_and_bounds);
+    // 生成切面mask轮廓
+    let rt_build_mask = generate_mask(line_result, &volume_bounds);
+    // 轮廓提取
+    let rt_build_result = mask_to_rt(rt_build_mask, &volume_bounds);
+    let result = rt_build_result;
+    serde_wasm_bindgen::to_value(&result).unwrap()
 }
 
 #[wasm_bindgen]
-pub fn rt2rt(numbers: Box<[JsValue]>) -> Box<[JsValue]>{
+pub fn rt2rt(numbers: Box<[JsValue]>) -> Box<[JsValue]> {
     // vec![JsValue::NULL, JsValue::UNDEFINED, JsValue::].into_boxed_slice();
     for _value in numbers.iter() {
         // alert(&_value);
@@ -90,7 +73,7 @@ pub fn rt2rt(numbers: Box<[JsValue]>) -> Box<[JsValue]>{
     for (i, v) in numbers.iter().enumerate() {
         if v.is_object() {
             // for (index, value) in v.iter() {
-                
+
             // }
         }
         if !v.is_undefined() {
