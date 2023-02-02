@@ -1,6 +1,7 @@
 import reactLogo from './assets/react.svg'
-import { rt2rt } from './pkg/rt2rt'
+import { rt2rt, handleData } from './pkg/rt2rt'
 import './App.css'
+import data from './RT_fmt.json'
 // import { ImageInfo } from '../../rust/pkg/rt2rt_bg'
 
 function App() {
@@ -16,6 +17,10 @@ function App() {
     }
     console.log(rt2rt && rt2rt(obj));
     console.log(rt2rt && rt2rt([45, 99, 4466, 99, 88]));
+    console.time('耗时')
+    const x = handleData(data)
+    console.timeEnd('耗时')
+    console.log(x);
   }
 
   return (

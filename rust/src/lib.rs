@@ -92,12 +92,3 @@ pub fn rt2rt(numbers: Box<[JsValue]>) -> Box<[JsValue]> {
     // .into_boxed_slice()
 }
 
-// #[wasm_bindgen]
-// pub fn fib() -> i32 {
-//     let mut result = Vec::new();
-//     for i in 0..1000000 {
-//         result.push(i * 2)
-//     }
-
-//     return result[1];
-// }
