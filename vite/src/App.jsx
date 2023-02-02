@@ -1,9 +1,22 @@
-import { useState } from 'react'
 import reactLogo from './assets/react.svg'
+import { rt2rt } from './pkg/rt2rt'
 import './App.css'
+// import { ImageInfo } from '../../rust/pkg/rt2rt_bg'
 
 function App() {
-  const [count, setCount] = useState(0)
+
+  function test(params) {
+    const obj = {
+      column: 12,
+      row: 14,
+      lay_num: 15,
+      row_pixel_spacing: 15.0,
+      column_pixel_spacing: 16.0,
+      thickness: 3.0,
+    }
+    console.log(rt2rt && rt2rt(obj));
+    console.log(rt2rt && rt2rt([45, 99, 4466, 99, 88]));
+  }
 
   return (
     <div className="App">
@@ -17,8 +30,8 @@ function App() {
       </div>
       <h1>Vite + React</h1>
       <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
+        <button onClick={test}>
+          执行
         </button>
         <p>
           Edit <code>src/App.jsx</code> and save to test HMR
