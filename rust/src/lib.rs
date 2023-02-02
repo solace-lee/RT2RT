@@ -21,6 +21,17 @@ pub mod volume_tools;
 // }
 // #[wasm_bindgen]
 #[derive(Serialize, Deserialize)]
+pub struct ObjArray {
+    pub data: Vec<u32>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Person {
+    pub name: String,
+    pub age: u32,
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct ImageInfo {
     pub column: u32,
     pub row: u32,
@@ -28,6 +39,9 @@ pub struct ImageInfo {
     pub row_pixel_spacing: f64,
     pub column_pixel_spacing: f64,
     pub thickness: f64,
+    pub zm_obj_array: ObjArray,
+    pub zm_data: Vec<Vec<u32>>,
+    pub zm_data_obj: Vec<Person>,
     // pub image_position_patient: Vec<f64>,
     // pub data: Box<Vec<Vec<f64>>>,
 }
@@ -42,8 +56,28 @@ extern "C" {
 }
 
 #[wasm_bindgen]
-pub fn test (x: &JsValue) {
-    // let element: ImageInfo = x.into_serde();
+pub fn getObj (val: JsValue) -> JsValue {
+    let mut res: ImageInfo = serde_wasm_bindgen::from_value(val).unwrap();
+    let firstData: u32 = res.zm_obj_array.data[0] * 2;
+    let mut person = Person {
+        name: String::from("FEA_Dven"),
+        age: 20,
+    };
+    let new_array = vec![1, 2, 3];
+    let two_array = vec![4, 5, 6];
+    let mut i = 0;
+    while i < 2 {
+        let person = Person {
+            name: String::from("FEA_Dven"),
+            age: 20 + i,
+        };
+        res.zm_data_obj.push(person);
+        i += 1
+    }
+    res.zm_obj_array.data.push(firstData);
+    res.zm_data.push(new_array);
+    res.zm_data.push(two_array);
+    serde_wasm_bindgen::to_value(&res).unwrap()
 }
 
 #[wasm_bindgen]
