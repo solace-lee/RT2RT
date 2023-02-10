@@ -176,3 +176,7 @@ pub fn trace_contours(mask: Mask) -> Vec<Contours> {
     }
     contours
 }
+
+pub fn simplify_contours () {
+    
+}

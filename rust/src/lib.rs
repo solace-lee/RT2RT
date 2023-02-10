@@ -25,7 +25,7 @@ pub fn rt2rt(val: JsValue) -> JsValue {
     // 获取体数据的边界
     let volume_bounds = get_volume_bounds(&params);
     // 物理坐标转像素坐标，并寻找边界
-    let rt_pxdata_and_bounds = get_rt_pxdata_and_bounds(&params);
+    let rt_pxdata_and_bounds = get_rt_pxdata_and_bounds(&params, &volume_bounds);
     // 扫描线算法
     let line_result = scan_line(rt_pxdata_and_bounds);
     // 生成切面mask轮廓

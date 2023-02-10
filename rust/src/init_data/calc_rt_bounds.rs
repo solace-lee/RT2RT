@@ -78,15 +78,20 @@ pub fn get_volume_bounds(imagainfo: &ImageInfo) -> Bounds {
 }
 
 ///物理坐标转像素坐标并计算轮廓边界
-pub fn get_rt_pxdata_and_bounds(imagainfo: &ImageInfo) -> PxData {
+pub fn get_rt_pxdata_and_bounds(imagainfo: &ImageInfo, bounds: &Bounds) -> PxData {
     let ImageInfo {
         data,
         row_pixel_spacing,
         column_pixel_spacing,
+        column,
+        row,
         ..
     } = imagainfo;
 
-    // let result = data.iter().iter().iter().for_each(|v| )
+    let Bounds {
+        px_position_patient,
+        ..
+    } = bounds;
 
     let mut result = Vec::new();
     let mut bounds = BoundsLimit {
@@ -98,8 +103,15 @@ pub fn get_rt_pxdata_and_bounds(imagainfo: &ImageInfo) -> PxData {
 
     let mut layer_bounds: Vec<BoundsLimit> = Vec::new();
 
-    for index in 0..data.len() {
-        // for index in 0..2 {
+    let z_position_layer_num = px_position_patient.len() / 3;
+    let max_colume = *column as i32;
+    let max_row = *row as i32;
+
+    for index in 0..data.len() { // 遍历每一层
+        let position_index = (index + z_position_layer_num - 1) % z_position_layer_num;
+        let px_position_x = px_position_patient[position_index] as i32;
+        let px_position_y = px_position_patient[position_index + 1] as i32;
+        
         let i = &data[index];
         let mut o = Vec::new();
 
@@ -117,8 +129,13 @@ pub fn get_rt_pxdata_and_bounds(imagainfo: &ImageInfo) -> PxData {
                     for k in 0..(j.len() / 2) {
                         let kx = j[k * 2];
                         let ky = j[k * 2 + 1];
-                        let x = (kx / row_pixel_spacing).ceil() as i32;
-                        let y = (ky / column_pixel_spacing).ceil() as i32;
+                        let x = (kx / row_pixel_spacing).ceil() as i32 - px_position_x;
+                        let y = (ky / column_pixel_spacing).ceil() as i32 - px_position_y;
+
+                        if x < 0 || y < 0 || x > max_colume || y > max_row {
+                            // 剔除超过dicom范围的坐标数据
+                            continue;
+                        }
 
                         if item_bounds.max_x < x {
                             item_bounds.max_x = x

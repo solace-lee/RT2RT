@@ -36,7 +36,7 @@ pub fn generate_mask(line: Vec<Vec<i32>>, bounds: &Bounds) -> RTMask {
         z,
         x_layer,             // x轴 像素/层
         y_layer,             // y轴 像素/ 层
-        px_position_patient, // 每层的原点像素坐标
+        ..
     } = bounds;
     let x_layer_num = (*x as f64 / x_layer.round()).ceil(); // 计算X切面的层数
     let y_layer_num = (*y as f64 / y_layer.round()).ceil(); // 计算Y切面的层数
@@ -65,23 +65,8 @@ pub fn generate_mask(line: Vec<Vec<i32>>, bounds: &Bounds) -> RTMask {
         ],
     };
 
-    let z_layer_num = px_position_patient.len() / 3;
-
-    // println!(
-    //     "X轴层数{:?},像素{:?} Y轴层数{:?}, 像素{:?}",
-    //     result.x_rt.len(),
-    //     x_layer.round(),
-    //     result.y_rt.len(),
-    //     y_layer.round(),
-    // );
-
     for z in 0..line.len() {
         let layer_coords = &line[z]; // z层数
-        let position_index = (z + z_layer_num - 1) % z_layer_num;
-        let px_position_x = px_position_patient[position_index] as isize;
-        let px_position_y = px_position_patient[position_index + 1] as isize;
-
-        // println!("x起始像素{}，y起始像素{}", px_position_x, px_position_y);
 
         for line_index in 0..(layer_coords.len() / 3) as usize {
             let line_x_start = &layer_coords[line_index * 3];
@@ -93,12 +78,12 @@ pub fn generate_mask(line: Vec<Vec<i32>>, bounds: &Bounds) -> RTMask {
 
             // 计算Y切面对应Y的层数
             let y_layer_index =
-                ((*line_y as isize - px_position_y) / (y_layer.round() as isize)) as usize;
+                (*line_y as isize / (y_layer.round() as isize)) as usize;
 
-            let y_px = *line_y as isize - px_position_y; // Y 坐标
+            let y_px = *line_y as isize; // Y 坐标
 
             for x_slice_layer in x_slice_begin_position..x_slice_end_position {
-                let x_px = x_slice_layer - px_position_x; // X 坐标
+                let x_px = x_slice_layer; // X 坐标
 
                 // 计算X切面对应X的层数
                 let x_layer_index = (x_px / (x_layer.round() as isize)) as usize;

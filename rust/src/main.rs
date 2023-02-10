@@ -22,7 +22,7 @@ fn main() {
     println!("volume边界为：{:?}", volume_bounds);
 
     // 物理坐标转像素坐标，并寻找边界
-    let rt_pxdata_and_bounds = get_rt_pxdata_and_bounds(&result);
+    let rt_pxdata_and_bounds = get_rt_pxdata_and_bounds(&result, &volume_bounds);
     println!("轮廓的边界为：{:#?}", rt_pxdata_and_bounds.bounds);
 
     let sys_time1 = SystemTime::now();
