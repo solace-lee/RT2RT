@@ -21,7 +21,6 @@ struct PreMask {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-
 pub struct Contours {
     pub inner: bool,
     pub label: isize,

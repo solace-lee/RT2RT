@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::init_data::calc_rt_bounds::Bounds;
 
-use super::magic_wand::{trace_contours, Mask, Contours};
+use super::magic_wand::{trace_contours, Contours, Mask};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 
@@ -11,11 +11,6 @@ pub struct RTMask {
     pub y_rt: Vec<Vec<isize>>,
     pub x_bounds: Vec<MaskBounds>,
     pub y_bounds: Vec<MaskBounds>,
-    // pub x_width: u32,
-    // pub y_width: u32,
-    // pub x_height: u32,
-    // pub y_height: u32,
-    // pub px_position_patient: Vec<i64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -25,6 +20,12 @@ pub struct MaskBounds {
     pub miny: isize,
     pub maxx: isize,
     pub maxy: isize,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RTContours {
+    pub x: Vec<Vec<Contours>>,
+    pub y: Vec<Vec<Contours>>,
 }
 
 // 构建
@@ -64,6 +65,8 @@ pub fn generate_mask(line: Vec<Vec<i32>>, bounds: &Bounds) -> RTMask {
         ],
     };
 
+    let z_layer_num = px_position_patient.len() / 3;
+
     // println!(
     //     "X轴层数{:?},像素{:?} Y轴层数{:?}, 像素{:?}",
     //     result.x_rt.len(),
@@ -74,7 +77,7 @@ pub fn generate_mask(line: Vec<Vec<i32>>, bounds: &Bounds) -> RTMask {
 
     for z in 0..line.len() {
         let layer_coords = &line[z]; // z层数
-        let position_index = z % (px_position_patient.len() / 3);
+        let position_index = (z + z_layer_num - 1) % z_layer_num;
         let px_position_x = px_position_patient[position_index] as isize;
         let px_position_y = px_position_patient[position_index + 1] as isize;
 
@@ -138,12 +141,12 @@ pub fn generate_mask(line: Vec<Vec<i32>>, bounds: &Bounds) -> RTMask {
     return result;
 }
 
-pub fn mask_to_rt(all_mask: RTMask, bounds: &Bounds) -> Vec<Vec<Contours>> {
+pub fn mask_to_rt(all_mask: RTMask, bounds: &Bounds) -> RTContours {
     let Bounds {
         x,
         y,
         z,
-        // px_position_patient, // 每层的原点像素坐标
+        px_position_patient, // 每层的原点像素坐标
         ..
     } = bounds;
 
@@ -154,10 +157,16 @@ pub fn mask_to_rt(all_mask: RTMask, bounds: &Bounds) -> Vec<Vec<Contours>> {
         y_bounds,
     } = all_mask;
 
-    let mut result_data = Vec::new();
+    let mut result_data = RTContours {
+        x: Vec::new(),
+        y: Vec::new(),
+    };
+
+    let layer_num = px_position_patient.len() / 3;
 
     // X截面
     for index in 0..x_rt.len() {
+        result_data.x.push(Vec::new());
         let MaskBounds {
             minx,
             miny,
@@ -170,7 +179,7 @@ pub fn mask_to_rt(all_mask: RTMask, bounds: &Bounds) -> Vec<Vec<Contours>> {
         let mask_item = &x_rt[index];
 
         // 提取mask的轮廓
-        let contours = trace_contours(Mask {
+        let mut contours = trace_contours(Mask {
             data: mask_item,
             width: *y as isize,
             height: *z as isize,
@@ -179,11 +188,24 @@ pub fn mask_to_rt(all_mask: RTMask, bounds: &Bounds) -> Vec<Vec<Contours>> {
             maxx,
             maxy,
         });
-        result_data.push(contours);
+        for index in 0..contours.len() {
+            // 轮廓数
+            let length = contours[index].points.len();
+            for i in 0..(length / 2) {
+                // 遍历每个轮廓
+                let y = i * 2;
+                let z = contours[index].points[y + 1];
+                let dy =
+                    px_position_patient[((layer_num + z as usize - 1) % layer_num) + 1] as isize;
+                contours[index].points[y] = contours[index].points[y] + dy;
+            }
+        }
+        result_data.x[index] = contours;
     }
 
     // Y截面
     for index in 0..y_rt.len() {
+        result_data.y.push(Vec::new());
         let MaskBounds {
             minx,
             miny,
@@ -196,7 +218,7 @@ pub fn mask_to_rt(all_mask: RTMask, bounds: &Bounds) -> Vec<Vec<Contours>> {
         let mask_item = &y_rt[index];
 
         // 提取mask的轮廓
-        let contours = trace_contours(Mask {
+        let mut contours = trace_contours(Mask {
             data: mask_item,
             width: *x as isize,
             height: *z as isize,
@@ -205,7 +227,18 @@ pub fn mask_to_rt(all_mask: RTMask, bounds: &Bounds) -> Vec<Vec<Contours>> {
             maxx,
             maxy,
         });
-        result_data.push(contours);
+        for index in 0..contours.len() {
+            // 轮廓数
+            let length = contours[index].points.len();
+            for i in 0..(length / 2) {
+                // 遍历每个轮廓
+                let x = i * 2;
+                let z = contours[index].points[x + 1];
+                let dx = px_position_patient[(layer_num + z as usize - 1) % layer_num] as isize;
+                contours[index].points[x] = contours[index].points[x] + dx;
+            }
+        }
+        result_data.y[index] = contours;
     }
     result_data
 }
