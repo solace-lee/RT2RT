@@ -38,8 +38,8 @@ pub fn generate_mask(line: Vec<Vec<i32>>, bounds: &Bounds) -> RTMask {
         y_layer, // y轴 像素/ 层
         ..
     } = bounds;
-    let x_layer_num = (*x as f64 / x_layer.round()).ceil(); // 计算X切面的层数
-    let y_layer_num = (*y as f64 / y_layer.round()).ceil(); // 计算Y切面的层数
+    let x_layer_num = (*x as f64 / x_layer).ceil(); // 计算X切面的层数
+    let y_layer_num = (*y as f64 / y_layer).ceil(); // 计算Y切面的层数
 
     // 初始化mask
     let mut result = RTMask {
@@ -77,7 +77,7 @@ pub fn generate_mask(line: Vec<Vec<i32>>, bounds: &Bounds) -> RTMask {
             let x_slice_end_position = ((*line_x_end as f64).ceil()) as isize;
 
             // 计算Y切面对应Y的层数
-            let y_layer_index = (*line_y as isize / (y_layer.round() as isize)) as usize;
+            let y_layer_index = (*line_y as f64 / y_layer).round() as usize;
 
             let y_px = *line_y as isize; // Y 坐标
 
@@ -85,10 +85,10 @@ pub fn generate_mask(line: Vec<Vec<i32>>, bounds: &Bounds) -> RTMask {
                 // X 坐标
 
                 // 计算X切面对应X的层数
-                let x_layer_index = (x_slice_layer / (x_layer.round() as isize)) as usize;
+                let x_layer_index = (x_slice_layer as f64 / x_layer).round() as usize;
 
                 // 生成Y切面
-                if (*line_y as f64 / y_layer.round()) == y_layer_index as f64 {
+                if (*line_y as f64 - (y_layer * y_layer_index as f64)).abs() < 0.5 {
                     result.y_rt[y_layer_index]
                         [(z as isize * *x as isize + x_slice_layer) as usize] = 1;
                     // 记录mask的边界
@@ -107,7 +107,7 @@ pub fn generate_mask(line: Vec<Vec<i32>>, bounds: &Bounds) -> RTMask {
                     }
                 }
                 // 生成X切面
-                if (x_slice_layer as f64 / y_layer.round()) == x_layer_index as f64 {
+                if (x_slice_layer as f64 - (x_layer * x_layer_index as f64)).abs() < 0.5 {
                     result.x_rt[x_layer_index][(z as isize * *y as isize + y_px) as usize] = 1;
                     // 记录mask的边界
                     if result.x_bounds[x_layer_index].minx > y_px {
