@@ -166,6 +166,26 @@ pub fn mask_to_rt(all_mask: RTMask, bounds: &Bounds) -> RTContours {
         }
         let mask_item = &x_rt[index];
 
+        // 处理单条直线的问题
+        let mut minx = minx;
+        let mut maxx = maxx;
+        let mut miny = miny;
+        let mut maxy = maxy;
+        if maxx == minx {
+            if maxx == *y as isize {
+                minx -= 1;
+            } else {
+                maxx += 1;
+            }
+        }
+        if maxy == miny {
+            if maxy == *x as isize {
+                miny -= 1;
+            } else {
+                maxy += 1;
+            }
+        }
+
         // 提取mask的轮廓
         let mut contours = trace_contours(Mask {
             data: mask_item,
@@ -176,6 +196,11 @@ pub fn mask_to_rt(all_mask: RTMask, bounds: &Bounds) -> RTContours {
             maxx,
             maxy,
         });
+        // if index == 64 {
+        //     println!("hh, {:#?}, {}, {}", contours, minx, maxx);
+        //     output::output(&contours, "./json/xxx.json");
+        // }
+
         for index in 0..contours.len() {
             // 轮廓数
             let length = contours[index].points.len();
@@ -204,6 +229,26 @@ pub fn mask_to_rt(all_mask: RTMask, bounds: &Bounds) -> RTContours {
             continue;
         }
         let mask_item = &y_rt[index];
+
+        // 处理单条直线的问题
+        let mut minx = minx;
+        let mut maxx = maxx;
+        let mut miny = miny;
+        let mut maxy = maxy;
+        if maxx == minx {
+            if maxx == *y as isize {
+                minx -= 1;
+            } else {
+                maxx += 1;
+            }
+        }
+        if maxy == miny {
+            if maxy == *x as isize {
+                miny -= 1;
+            } else {
+                maxy += 1;
+            }
+        }
 
         // 提取mask的轮廓
         let mut contours = trace_contours(Mask {
