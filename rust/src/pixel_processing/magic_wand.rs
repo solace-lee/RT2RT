@@ -21,7 +21,6 @@ struct PreMask {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-
 pub struct Contours {
     pub inner: bool,
     pub label: isize,
@@ -176,4 +175,8 @@ pub fn trace_contours(mask: Mask) -> Vec<Contours> {
         }
     }
     contours
+}
+
+pub fn simplify_contours () {
+    
 }

@@ -2,30 +2,18 @@ import reactLogo from './assets/react.svg'
 import { rt2rt, handleData } from '../pkg/rt2rt'
 import { json } from './json'
 import './App.css'
+import data from './RT_fmt.json'
 // import { ImageInfo } from '../../rust/pkg/rt2rt_bg'
 
 function App() {
 
-  function clickTest(params) {
-    console.time('start')
-    console.log(handleData && handleData(json))
-    console.timeEnd('start')
-    // const obj = {
-    //   column: 12,
-    //   row: 14,
-    //   lay_num: 15,
-    //   row_pixel_spacing: 15.0,
-    //   column_pixel_spacing: 16.0,
-    //   thickness: 3.0,
-    //   zm_obj_array: {
-    //     data: [4]
-    //   },
-    //   zm_data: [],
-    //   zm_data_obj: []
-    // }
-    // console.log(getObj && getObj(obj));
+  function test(params) {
     // console.log(rt2rt && rt2rt(obj));
     // console.log(rt2rt && rt2rt([45, 99, 4466, 99, 88]));
+    console.time('耗时')
+    const x = rt2rt(data)
+    console.timeEnd('耗时')
+    console.log(x);
   }
 
   return (
