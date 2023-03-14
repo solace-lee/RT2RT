@@ -43,8 +43,8 @@ pub fn generate_mask(line: Vec<Vec<i32>>, bounds: &Bounds) -> RTMask {
 
     // 初始化mask
     let mut result = RTMask {
-        x_rt: vec![vec![0; (y * z) as usize]; x_layer_num as usize],
-        y_rt: vec![vec![0; (x * z) as usize]; y_layer_num as usize],
+        x_rt: vec![vec![0; (y * (z + 1)) as usize]; x_layer_num as usize],
+        y_rt: vec![vec![0; (x * (z + 1)) as usize]; y_layer_num as usize],
         x_bounds: vec![
             MaskBounds {
                 minx: *y as isize,
@@ -166,25 +166,6 @@ pub fn mask_to_rt(all_mask: RTMask, bounds: &Bounds) -> RTContours {
         }
         let mask_item = &x_rt[index];
 
-        // 处理单条直线的问题
-        let mut minx = minx;
-        let mut maxx = maxx;
-        let mut miny = miny;
-        let mut maxy = maxy;
-        if maxx == minx {
-            if maxx == *y as isize {
-                minx -= 1;
-            } else {
-                maxx += 1;
-            }
-        }
-        if maxy == miny {
-            if maxy == *x as isize {
-                miny -= 1;
-            } else {
-                maxy += 1;
-            }
-        }
 
         // 提取mask的轮廓
         let mut contours = trace_contours(Mask {
@@ -194,7 +175,7 @@ pub fn mask_to_rt(all_mask: RTMask, bounds: &Bounds) -> RTContours {
             minx,
             miny,
             maxx,
-            maxy,
+            maxy: maxy + 1,
         });
         // if index == 64 {
         //     println!("hh, {:#?}, {}, {}", contours, minx, maxx);
@@ -209,7 +190,7 @@ pub fn mask_to_rt(all_mask: RTMask, bounds: &Bounds) -> RTContours {
                 let y = i * 2;
                 let z = contours[index].points[y + 1];
                 let dy =
-                    px_position_patient[((layer_num + z as usize - 1) % layer_num) + 1] as isize;
+                    px_position_patient[((layer_num + z as usize) % layer_num) * 3 + 1] as isize;
                 contours[index].points[y] = contours[index].points[y] + dy;
             }
         }
@@ -230,25 +211,25 @@ pub fn mask_to_rt(all_mask: RTMask, bounds: &Bounds) -> RTContours {
         }
         let mask_item = &y_rt[index];
 
-        // 处理单条直线的问题
-        let mut minx = minx;
-        let mut maxx = maxx;
-        let mut miny = miny;
-        let mut maxy = maxy;
-        if maxx == minx {
-            if maxx == *y as isize {
-                minx -= 1;
-            } else {
-                maxx += 1;
-            }
-        }
-        if maxy == miny {
-            if maxy == *x as isize {
-                miny -= 1;
-            } else {
-                maxy += 1;
-            }
-        }
+        // // 处理单条直线的问题
+        // let mut minx = minx;
+        // let mut maxx = maxx;
+        // let mut miny = miny;
+        // let mut maxy = maxy;
+        // if maxx == minx {
+        //     if maxx == *y as isize {
+        //         minx -= 1;
+        //     } else {
+        //         maxx += 1;
+        //     }
+        // }
+        // if maxy == miny {
+        //     if maxy == *x as isize {
+        //         miny -= 1;
+        //     } else {
+        //         maxy += 1;
+        //     }
+        // }
 
         // 提取mask的轮廓
         let mut contours = trace_contours(Mask {
@@ -258,7 +239,7 @@ pub fn mask_to_rt(all_mask: RTMask, bounds: &Bounds) -> RTContours {
             minx,
             miny,
             maxx,
-            maxy,
+            maxy: maxy + 1,
         });
         for index in 0..contours.len() {
             // 轮廓数
@@ -267,7 +248,7 @@ pub fn mask_to_rt(all_mask: RTMask, bounds: &Bounds) -> RTContours {
                 // 遍历每个轮廓
                 let x = i * 2;
                 let z = contours[index].points[x + 1];
-                let dx = px_position_patient[(layer_num + z as usize - 1) % layer_num] as isize;
+                let dx = px_position_patient[(layer_num + z as usize) % layer_num * 3] as isize;
                 contours[index].points[x] = contours[index].points[x] + dx;
             }
         }
