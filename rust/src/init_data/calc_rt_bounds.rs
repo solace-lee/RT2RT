@@ -108,9 +108,9 @@ pub fn get_rt_pxdata_and_bounds(imagainfo: &ImageInfo, bounds: &Bounds) -> PxDat
     let max_row = *row as i32;
 
     for index in 0..data.len() { // 遍历每一层
-        let position_index = (index + z_position_layer_num - 1) % z_position_layer_num;
-        let px_position_x = px_position_patient[position_index] as i32;
-        let px_position_y = px_position_patient[position_index + 1] as i32;
+        let position_index = (index + z_position_layer_num) % z_position_layer_num;
+        let px_position_x = px_position_patient[position_index * 3] as i32;
+        let px_position_y = px_position_patient[position_index * 3 + 1] as i32;
         
         let i = &data[index];
         let mut o = Vec::new();
