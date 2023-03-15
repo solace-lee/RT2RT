@@ -177,6 +177,6 @@ pub fn trace_contours(mask: Mask) -> Vec<Contours> {
     contours
 }
 
-pub fn simplify_contours (contours, simplifyTolerant: f64, simplifyCount: f64) {
+pub fn simplify_contours (contours: Vec<i32>, simplifyTolerant: f64, simplifyCount: f64) {
     
 }

@@ -6,6 +6,7 @@ description = ""
 repository = ""
 license = "MIT"
 
+# wasm-pack build --release --target web
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
 crate-type = ["cdylib"]
