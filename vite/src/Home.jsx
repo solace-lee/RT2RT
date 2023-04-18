@@ -1,5 +1,5 @@
 import reactLogo from './assets/react.svg'
-import { rt2rt, handleData } from '../pkg/rt2rt'
+// import { rt2rt, handleData } from '../pkg/rt2rt'
 import { json } from './json'
 import './App.css'
 import data from './RT_fmt.json'
@@ -7,7 +7,7 @@ import data from './RT_fmt.json'
 
 function App() {
 
-  function test(params) {
+  function clickTest(params) {
     // console.log(rt2rt && rt2rt(obj));
     // console.log(rt2rt && rt2rt([45, 99, 4466, 99, 88]));
     console.time('耗时')
@@ -18,6 +18,7 @@ function App() {
 
   return (
     <div className="App">
+      <canvas className="glslCanvas" data-fragment-url="yourShader.frag" data-textures="yourInputImage.png" width="500" height="500"></canvas>
       <div>
         <a href="https://vitejs.dev" target="_blank">
           <img src="/vite.svg" className="logo" alt="Vite logo" />
