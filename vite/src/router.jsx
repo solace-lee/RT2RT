@@ -1,6 +1,6 @@
 import { createBrowserRouter } from "react-router-dom";
 import Home from "./Home";
-import Webgpu from "./Webgpu";
+import Wgpu from "./wgpu";
 
 const router = [
   {
@@ -9,7 +9,7 @@ const router = [
   },
   {
     path: "/webgpu",
-    element: <Webgpu />,
+    element: <Wgpu />,
   },
 ];
 
