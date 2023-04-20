@@ -13,7 +13,7 @@ fn vs_main(
     vec2<f32>(0.5, -0.5),
   );
 
-  var colos = array<vec4<f32>, 3>(
+  var colors = array<vec4<f32>, 3>(
     vec4<f32>(1.0, 0.0, 0.0, 1.0),
     vec4<f32>(0.0, 1.0, 0.0, 1.0),
     vec4<f32>(0.0, 0.0, 1.0, 1.0),
@@ -21,7 +21,7 @@ fn vs_main(
 
   var output : Fragment;
   output.Position = vec4<f32>(position[v_id], 0.0, 1.0);
-  output.Color = vec4<f32> colos[v_id];
+  output.Color = vec4<f32>(colors[v_id]);
   return output;
 };
 
