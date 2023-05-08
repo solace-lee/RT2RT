@@ -177,6 +177,82 @@ pub fn trace_contours(mask: Mask) -> Vec<Contours> {
     contours
 }
 
-pub fn simplify_contours (contours: Vec<i32>, simplifyTolerant: f64, simplifyCount: f64) {
+pub fn simplify_contours (contours: Vec<Contours>, simplifyTolerant: f64, simplifyCount: f64) -> Vec<Contours> {
+    let mut i: usize;
+    let mut j: usize;
+    let mut k: usize;
+    let mut x: f64;
+    let mut y: f64;
+    let mut x0: f64;
+    let mut y0: f64;
+    let mut x1: f64;
+    let mut y1: f64;
+    let mut x2: f64;
+    let mut y2: f64;
+    let mut d: f64;
+    let mut dmax: f64;
+    let mut index: usize;
+    let mut points: Vec<f64>;
+    let mut contour: Contours;
+    let mut simplified: Vec<f64>;
+    let mut len: usize;
+    let mut count: usize;
+    let mut tolerance: f64 = simplifyTolerant;
+    let mut maxCount: usize = simplifyCount as usize;
+
+    for i in 0..contours.len() {
+        contour = contours[i];
+        points = contour.points;
+        simplified = Vec::new();
+        len = points.len();
+        if len < 6 {
+            continue;
+        }
+        count = maxCount;
+        if count > len / 2 {
+            count = len / 2;
+        }
+        if count < 2 {
+            continue;
+        }
+        if tolerance <= 0.0 {
+            tolerance = 0.01;
+        }
+        while count > 2 {
+            dmax = 0.0;
+            index = 0;
+            x0 = points[0];
+            y0 = points[1];
+            x1 = points[len - 2];
+            y1 = points[len - 1];
+            for j in 2..(len - 3) {
+                k = j + 1;
+                x2 = points[k];
+                y2 = points[k + 1];
+                d = distance(x0, y0, x1, y1, x2, y2);
+                if d > dmax {
+                    index = j;
+                    dmax = d;
+                }
+            }
+            if dmax > tolerance {
+                simplified.push(points[index]);
+                simplified.push(points[index + 1]);
+                points.remove(index);
+                points.remove(index);
+                len -= 2;
+                count -= 1;
+            } else {
+                break;
+            }
+        }
+        simplified.push(points[0]);
+        simplified.push(points[1]);
+        simplified.push(points[len - 2]);
+        simplified.push(points[len - 1]);
+        contour.points = simplified;
+        contours[i] = contour;
+    }
+    contours
     
 }
