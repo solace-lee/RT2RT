@@ -91,6 +91,8 @@ function OrillusionPage(params) {
     // 设置材质
     mr.material = new LitMaterial();
 
+    console.log(obj, 'obj');
+
     scene3D.addChild(obj);
   }
 
