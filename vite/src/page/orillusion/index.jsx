@@ -18,6 +18,8 @@ import {
 class RotationX extends ComponentBase {
   onUpdate() {
     this.object3D.rotationX += 0.5;
+    this.object3D.rotationY += 0.6;
+    this.object3D.rotationZ += 0.8;
   }
 }
 

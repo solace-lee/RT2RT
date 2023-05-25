@@ -9,11 +9,20 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@babylonjs/core": "^6.4.1",
+    "@babylonjs/gui": "^6.4.1",
+    "@babylonjs/inspector": "^6.4.1",
+    "@babylonjs/loaders": "^6.4.1",
+    "@babylonjs/materials": "^6.4.1",
+    "@babylonjs/post-processes": "^6.4.1",
+    "@babylonjs/procedural-textures": "^6.4.1",
+    "@babylonjs/serializers": "^6.4.1",
     "@orillusion/core": "^0.6.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router": "^6.10.0",
     "react-router-dom": "^6.10.0",
+    "three": "^0.152.2",
     "vite-plugin-string": "^1.2.1"
   },
   "devDependencies": {
