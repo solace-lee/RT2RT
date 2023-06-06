@@ -58,6 +58,7 @@ function ThreePage(params) {
     // create function
 
     const computeShaderNode = new ShaderNode((stack) => {
+      console.log(stack);
 
       const particle = particleBufferNode.element(instanceIndex);
       const velocity = velocityBufferNode.element(instanceIndex);
