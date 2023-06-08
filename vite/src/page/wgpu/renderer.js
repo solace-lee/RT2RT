@@ -1,9 +1,11 @@
 import shader from "./shaders.wgsl";
 import TriangleMesh from "./triangle_mesh";
+import { mat4 } from "gl-matrix";
 
 export class Renderer {
   constructor(canvas) {
     this.canvas = canvas;
+    this.t = 0.0;
   }
 
   async Initialize() {
@@ -38,31 +40,39 @@ export class Renderer {
   }
 
   async makePipeline() {
+    this.uniformBuffer = this.device.createBuffer({
+      size: 64 * 3,
+      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+      // mappedAtCreation:
+    });
+
     // 创建绑定组布局
     const bindGroupLayout = this.device.createBindGroupLayout({
-      // entries: [{ // 条目
-      //   binding: 0, // 绑定点
-      //   visibility: GPUShaderStage.VERTEX, // 可见性
-      //   buffer: { // 缓冲区
-      //     type: 'uniform', // 类型
-      //   },
-      // }],
-      entries: [],
+      entries: [
+        {
+          // 条目
+          binding: 0, // 绑定点
+          visibility: GPUShaderStage.VERTEX, // 可见性
+          buffer: {
+            // 缓冲区
+            type: "uniform", // 类型
+          },
+        },
+      ],
     });
 
     // 创建绑定组,定义在着色器阶段的使用方式
     this.bindGroup = this.device.createBindGroup({
       layout: bindGroupLayout, // 绑定组布局
-      entries: [],
-      // entries: [{
-      //   binding: 0, // 绑定点
-      //   resource: { // 资源
-      //     buffer: device.createBuffer({ // 创建缓冲区
-      //       size: 4 * 4, // 大小
-      //       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST, // 用途
-      //     }),
-      //   },
-      // }],
+      entries: [
+        {
+          binding: 0, // 绑定点
+          resource: {
+            // 资源
+            buffer: this.uniformBuffer,
+          },
+        },
+      ],
     });
 
     // 创建管线布局
@@ -106,7 +116,25 @@ export class Renderer {
     this.triangleMesh = new TriangleMesh(this.device);
   }
 
-  render() {
+  render = () => {
+    this.t += 0.01;
+    if (this.t > 2.0 * Math.PI) {
+      this.t -= 2.0 * Math.PI;
+    }
+
+    const projection = mat4.create();
+    mat4.perspective(projection, Math.PI / 4, 800 / 600, 0.1, 10);
+
+    const view = mat4.create();
+    mat4.lookAt(view, [-2, 0, 2], [0, 0, 0], [0, 0, 1]);
+
+    const model = mat4.create();
+    mat4.rotate(model, model, this.t, [0, 0, 1]);
+
+    this.device.queue.writeBuffer(this.uniformBuffer, 0, model);
+    this.device.queue.writeBuffer(this.uniformBuffer, 64, view);
+    this.device.queue.writeBuffer(this.uniformBuffer, 128, projection);
+
     const commandEncoder = this.device.createCommandEncoder(); // 创建命令编码器
 
     const renderPass = commandEncoder.beginRenderPass({
@@ -131,5 +159,7 @@ export class Renderer {
     renderPass.draw(3); // 绘制
     renderPass.end(); // 结束
     this.device.queue.submit([commandEncoder.finish()]); // 提交
+
+    requestAnimationFrame(this.render)
   }
 }

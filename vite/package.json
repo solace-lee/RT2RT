@@ -18,6 +18,7 @@
     "@babylonjs/procedural-textures": "^6.4.1",
     "@babylonjs/serializers": "^6.4.1",
     "@orillusion/core": "^0.6.1",
+    "gl-matrix": "^3.4.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router": "^6.10.0",
