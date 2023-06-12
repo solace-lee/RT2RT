@@ -5,24 +5,26 @@ struct TransformData {
 }
 
 @binding(0) @group(0) var<uniform> tranformUBO: TransformData;
+@binding(1) @group(0) var myTexture: texture_2d<f32>;
+@binding(2) @group(0) var mySampler: sampler;
 
 struct Fragment {
   @builtin(position) Position : vec4<f32>,
-  @location(0) Color : vec4<f32>,
+  @location(0) TexCoord : vec2<f32>,
 };
 
 @vertex
 fn vs_main(
-  @location(0) vertexPosition: vec3<f32>, @location(1) vertexColor: vec3<f32>
+  @location(0) vertexPosition: vec3<f32>, @location(1) vertexTextCoord: vec2<f32>
 ) -> Fragment {
 
   var output : Fragment;
   output.Position = tranformUBO.projection * tranformUBO.view * tranformUBO.model * vec4<f32>(vertexPosition, 1.0);
-  output.Color = vec4<f32>(vertexColor, 1.0);
+  output.TexCoord = vertexTextCoord;
   return output;
 };
 
 @fragment
-fn fs_main(@location(0) Color: vec4<f32>) -> @location(0) vec4<f32> {
-  return Color;
+fn fs_main(@location(0) TexCoord: vec2<f32>) -> @location(0) vec4<f32> {
+  return textureSample(myTexture, mySampler, TexCoord);
 };

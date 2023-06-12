@@ -1,3 +1,4 @@
+import { Material } from "./material";
 import shader from "./shaders.wgsl";
 import TriangleMesh from "./triangle_mesh";
 import { mat4 } from "gl-matrix";
@@ -11,7 +12,7 @@ export class Renderer {
   async Initialize() {
     await this.setupDevice();
 
-    this.createAssets();
+    await this.createAssets();
 
     await this.makePipeline();
 
@@ -58,6 +59,16 @@ export class Renderer {
             type: "uniform", // 类型
           },
         },
+        {
+          binding: 1,
+          visibility: GPUShaderStage.FRAGMENT,
+          texture: {},
+        },
+        {
+          binding: 2,
+          visibility: GPUShaderStage.FRAGMENT,
+          sampler: {},
+        },
       ],
     });
 
@@ -71,6 +82,14 @@ export class Renderer {
             // 资源
             buffer: this.uniformBuffer,
           },
+        },
+        {
+          binding: 1, // 绑定点
+          resource: this.material.view,
+        },
+        {
+          binding: 2, // 绑定点
+          resource: this.material.sampler,
         },
       ],
     });
@@ -112,8 +131,11 @@ export class Renderer {
   }
 
   // 创建静态资源
-  createAssets() {
+  async createAssets() {
     this.triangleMesh = new TriangleMesh(this.device);
+    this.material = new Material();
+
+    await this.material.initialize(this.device, "/bg.jpeg");
   }
 
   render = () => {
@@ -160,6 +182,6 @@ export class Renderer {
     renderPass.end(); // 结束
     this.device.queue.submit([commandEncoder.finish()]); // 提交
 
-    requestAnimationFrame(this.render)
-  }
+    requestAnimationFrame(this.render);
+  };
 }
