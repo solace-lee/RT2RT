@@ -1,12 +1,13 @@
 import { Material } from "./material";
-import shader from "./shaders.wgsl";
+import shader from "./shaders/shaders.wgsl";
 import TriangleMesh from "./triangle_mesh";
 import { mat4 } from "gl-matrix";
 
+// window.mat4 = mat4;
+// console.log(mat4);
 export class Renderer {
   constructor(canvas) {
     this.canvas = canvas;
-    this.t = 0.0;
   }
 
   async Initialize() {
@@ -15,8 +16,6 @@ export class Renderer {
     await this.createAssets();
 
     await this.makePipeline();
-
-    this.render();
   }
 
   async setupDevice() {
@@ -138,22 +137,12 @@ export class Renderer {
     await this.material.initialize(this.device, "/bg.jpeg");
   }
 
-  render = () => {
-    this.t += 0.01;
-    if (this.t > 2.0 * Math.PI) {
-      this.t -= 2.0 * Math.PI;
-    }
-
+  async render(camera, triangles) {
     const projection = mat4.create();
     mat4.perspective(projection, Math.PI / 4, 800 / 600, 0.1, 10);
 
-    const view = mat4.create();
-    mat4.lookAt(view, [-2, 0, 2], [0, 0, 0], [0, 0, 1]);
+    const view = camera.get_view();
 
-    const model = mat4.create();
-    mat4.rotate(model, model, this.t, [0, 0, 1]);
-
-    this.device.queue.writeBuffer(this.uniformBuffer, 0, model);
     this.device.queue.writeBuffer(this.uniformBuffer, 64, view);
     this.device.queue.writeBuffer(this.uniformBuffer, 128, projection);
 
@@ -175,13 +164,18 @@ export class Renderer {
     // `setBindGroup`方法用于设置渲染通道中使用的资源绑定组。资源绑定组定义了一组要绑定在一起的资源以及这些资源在着色器阶段中的使用方式¹。
 
     renderPass.setPipeline(this.pipeline); // 设置管线
-    renderPass.setBindGroup(0, this.bindGroup); // 设置绑定组
     renderPass.setVertexBuffer(0, this.triangleMesh.buffer);
+
+    triangles.forEach((triangle) => {
+      const model = triangle.get_model();
+      this.device.queue.writeBuffer(this.uniformBuffer, 0, model);
+      renderPass.setBindGroup(0, this.bindGroup); // 设置绑定组
+      renderPass.draw(3); // 绘制
+    });
+
     // renderPass.draw(3, 1, 0); // 绘制
-    renderPass.draw(3); // 绘制
+
     renderPass.end(); // 结束
     this.device.queue.submit([commandEncoder.finish()]); // 提交
-
-    requestAnimationFrame(this.render);
-  };
+  }
 }
