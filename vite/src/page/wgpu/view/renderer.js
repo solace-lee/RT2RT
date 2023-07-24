@@ -40,12 +40,6 @@ export class Renderer {
   }
 
   async makePipeline() {
-    this.uniformBuffer = this.device.createBuffer({
-      size: 64 * 3,
-      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-      // mappedAtCreation:
-    });
-
     // 创建绑定组布局
     const bindGroupLayout = this.device.createBindGroupLayout({
       entries: [
@@ -53,10 +47,7 @@ export class Renderer {
           // 条目
           binding: 0, // 绑定点
           visibility: GPUShaderStage.VERTEX, // 可见性
-          buffer: {
-            // 缓冲区
-            type: "uniform", // 类型
-          },
+          buffer: {},
         },
         {
           binding: 1,
@@ -67,6 +58,14 @@ export class Renderer {
           binding: 2,
           visibility: GPUShaderStage.FRAGMENT,
           sampler: {},
+        },
+        {
+          binding: 3,
+          visibility: GPUShaderStage.VERTEX,
+          buffer: {
+            type: "read-only-storage",
+            hasDynamicOffset: false,
+          },
         },
       ],
     });
@@ -89,6 +88,12 @@ export class Renderer {
         {
           binding: 2, // 绑定点
           resource: this.material.sampler,
+        },
+        {
+          binding: 3, // 绑定点
+          resource: {
+            buffer: this.objectBuffer,
+          },
         },
       ],
     });
@@ -134,17 +139,36 @@ export class Renderer {
     this.triangleMesh = new TriangleMesh(this.device);
     this.material = new Material();
 
+    const modelBufferDescriptor = {
+      size: 64 * 1024,
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+    };
+    this.objectBuffer = this.device.createBuffer(modelBufferDescriptor);
+
+    this.uniformBuffer = this.device.createBuffer({
+      size: 64 * 2,
+      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+      // mappedAtCreation:
+    });
+
     await this.material.initialize(this.device, "/bg.jpeg");
   }
 
-  async render(camera, triangles) {
+  async render(camera, triangles, triangle_count) {
     const projection = mat4.create();
     mat4.perspective(projection, Math.PI / 4, 800 / 600, 0.1, 10);
 
     const view = camera.get_view();
 
-    this.device.queue.writeBuffer(this.uniformBuffer, 64, view);
-    this.device.queue.writeBuffer(this.uniformBuffer, 128, projection);
+    this.device.queue.writeBuffer(
+      this.objectBuffer,
+      0,
+      triangles,
+      0,
+      triangles.length
+    );
+    this.device.queue.writeBuffer(this.uniformBuffer, 0, view);
+    this.device.queue.writeBuffer(this.uniformBuffer, 64, projection);
 
     const commandEncoder = this.device.createCommandEncoder(); // 创建命令编码器
 
@@ -153,7 +177,7 @@ export class Renderer {
       colorAttachments: [
         {
           view: this.context.getCurrentTexture().createView(), // 获取纹理视图
-          loadValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 }, // 加载值
+          loadValue: { r: 0.5, g: 0.0, b: 0.25, a: 1.0 }, // 加载值
           storeOp: "store", // 存储操作
           loadOp: "clear", // 加载操作
         },
@@ -166,12 +190,8 @@ export class Renderer {
     renderPass.setPipeline(this.pipeline); // 设置管线
     renderPass.setVertexBuffer(0, this.triangleMesh.buffer);
 
-    triangles.forEach((triangle) => {
-      const model = triangle.get_model();
-      this.device.queue.writeBuffer(this.uniformBuffer, 0, model);
-      renderPass.setBindGroup(0, this.bindGroup); // 设置绑定组
-      renderPass.draw(3); // 绘制
-    });
+    renderPass.setBindGroup(0, this.bindGroup); // 设置绑定组
+    renderPass.draw(3, triangle_count, 0, 0); // 绘制
 
     // renderPass.draw(3, 1, 0); // 绘制
 

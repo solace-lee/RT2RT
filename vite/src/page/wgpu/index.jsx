@@ -32,7 +32,7 @@ function Wgpu() {
       canvas.requestPointerLock()
     }
     const app = new App(canvas)
-    app.inititalize()
+    await app.inititalize()
     app.run()
     setApp(app)
   }
