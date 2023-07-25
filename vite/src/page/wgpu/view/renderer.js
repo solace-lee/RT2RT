@@ -15,6 +15,8 @@ export class Renderer {
 
     await this.createAssets();
 
+    await this.makeDepthBufferResources()
+
     await this.makePipeline();
   }
 
@@ -37,6 +39,44 @@ export class Renderer {
       format: this.format, // 交换链格式
       alphaMode: "opaque", // 透明度模式
     });
+  }
+
+  // 处理深度问题
+  async makeDepthBufferResources() {
+    this.depthStencilState = {
+      format: "depth24plus-stencil8",
+      depthWriteEnabled: true,
+      depthCompare: "less-equal",
+    }
+    const size = {
+      width: this.canvas.width,
+      height: this.canvas.height,
+      depthOrArrayLayers: 1
+    }
+
+    const depthBufferDescriptor = {
+      size: size,
+      format: "depth24plus-stencil8",
+      usage: GPUTextureUsage.RENDER_ATTACHMENT,
+    }
+
+    this.depthStencilBuffer = this.device.createTexture(depthBufferDescriptor)
+    const viewDescriptor = {
+      format: "depth24plus-stencil8",
+      dimension: "2d",
+      aspect: "all"
+    }
+    this.depthStencilView = this.depthStencilBuffer.createView(viewDescriptor)
+
+    this.depthStencilAttachment = {
+      view: this.depthStencilView,
+      depthClearValue: 1.0,
+      depthLoadOp: "clear",
+      depthStoreOp: "store",
+
+      stencilLoadOp: "clear",
+      stencilStoreOp: "discard"
+    }
   }
 
   async makePipeline() {
@@ -131,6 +171,7 @@ export class Renderer {
         // 图元
         topology: "triangle-list", // 拓扑
       },
+      depthStencil: this.depthStencilState
     });
   }
 
@@ -182,6 +223,7 @@ export class Renderer {
           loadOp: "clear", // 加载操作
         },
       ],
+      depthStencilAttachment: this.depthStencilAttachment
     }); // 开始渲染通道
 
     // `setPipeline`方法用于设置渲染通道中使用的管线。管线定义了渲染操作的状态和行为，包括着色器、颜色混合、剔除等¹。
