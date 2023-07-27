@@ -1,7 +1,9 @@
 import { Material } from "./material";
 import shader from "./shaders/shaders.wgsl";
 import TriangleMesh from "./triangle_mesh";
+import QuadMesh from "./quad_mesh";
 import { mat4 } from "gl-matrix";
+import { object_types } from "../model/definitions";
 
 // window.mat4 = mat4;
 // console.log(mat4);
@@ -15,7 +17,7 @@ export class Renderer {
 
     await this.createAssets();
 
-    await this.makeDepthBufferResources()
+    await this.makeDepthBufferResources();
 
     await this.makePipeline();
   }
@@ -47,26 +49,26 @@ export class Renderer {
       format: "depth24plus-stencil8",
       depthWriteEnabled: true,
       depthCompare: "less-equal",
-    }
+    };
     const size = {
       width: this.canvas.width,
       height: this.canvas.height,
-      depthOrArrayLayers: 1
-    }
+      depthOrArrayLayers: 1,
+    };
 
     const depthBufferDescriptor = {
       size: size,
       format: "depth24plus-stencil8",
       usage: GPUTextureUsage.RENDER_ATTACHMENT,
-    }
+    };
 
-    this.depthStencilBuffer = this.device.createTexture(depthBufferDescriptor)
+    this.depthStencilBuffer = this.device.createTexture(depthBufferDescriptor);
     const viewDescriptor = {
       format: "depth24plus-stencil8",
       dimension: "2d",
-      aspect: "all"
-    }
-    this.depthStencilView = this.depthStencilBuffer.createView(viewDescriptor)
+      aspect: "all",
+    };
+    this.depthStencilView = this.depthStencilBuffer.createView(viewDescriptor);
 
     this.depthStencilAttachment = {
       view: this.depthStencilView,
@@ -75,8 +77,8 @@ export class Renderer {
       depthStoreOp: "store",
 
       stencilLoadOp: "clear",
-      stencilStoreOp: "discard"
-    }
+      stencilStoreOp: "discard",
+    };
   }
 
   async makePipeline() {
@@ -111,7 +113,7 @@ export class Renderer {
     });
 
     // 创建绑定组,定义在着色器阶段的使用方式
-    this.bindGroup = this.device.createBindGroup({
+    this.triangleBindGroup = this.device.createBindGroup({
       layout: bindGroupLayout, // 绑定组布局
       entries: [
         {
@@ -123,11 +125,38 @@ export class Renderer {
         },
         {
           binding: 1, // 绑定点
-          resource: this.material.view,
+          resource: this.triangleMaterial.view,
         },
         {
           binding: 2, // 绑定点
-          resource: this.material.sampler,
+          resource: this.triangleMaterial.sampler,
+        },
+        {
+          binding: 3, // 绑定点
+          resource: {
+            buffer: this.objectBuffer,
+          },
+        },
+      ],
+    });
+
+    this.quadBindGroup = this.device.createBindGroup({
+      layout: bindGroupLayout, // 绑定组布局
+      entries: [
+        {
+          binding: 0, // 绑定点
+          resource: {
+            // 资源
+            buffer: this.uniformBuffer,
+          },
+        },
+        {
+          binding: 1, // 绑定点
+          resource: this.quadMaterial.view,
+        },
+        {
+          binding: 2, // 绑定点
+          resource: this.quadMaterial.sampler,
         },
         {
           binding: 3, // 绑定点
@@ -171,14 +200,16 @@ export class Renderer {
         // 图元
         topology: "triangle-list", // 拓扑
       },
-      depthStencil: this.depthStencilState
+      depthStencil: this.depthStencilState,
     });
   }
 
   // 创建静态资源
   async createAssets() {
     this.triangleMesh = new TriangleMesh(this.device);
-    this.material = new Material();
+    this.triangleMaterial = new Material();
+    this.quadMesh = new QuadMesh(this.device);
+    this.quadMaterial = new Material();
 
     const modelBufferDescriptor = {
       size: 64 * 1024,
@@ -192,21 +223,22 @@ export class Renderer {
       // mappedAtCreation:
     });
 
-    await this.material.initialize(this.device, "/bg.jpeg");
+    await this.triangleMaterial.initialize(this.device, "/bg.jpeg");
+    await this.quadMaterial.initialize(this.device, "/bg.jpeg");
   }
 
-  async render(camera, triangles, triangle_count) {
+  async render(renderables) {
     const projection = mat4.create();
     mat4.perspective(projection, Math.PI / 4, 800 / 600, 0.1, 10);
 
-    const view = camera.get_view();
+    const view = renderables.view_transform;
 
     this.device.queue.writeBuffer(
       this.objectBuffer,
       0,
-      triangles,
+      renderables.model_transform,
       0,
-      triangles.length
+      renderables.model_transform.length
     );
     this.device.queue.writeBuffer(this.uniformBuffer, 0, view);
     this.device.queue.writeBuffer(this.uniformBuffer, 64, projection);
@@ -223,17 +255,37 @@ export class Renderer {
           loadOp: "clear", // 加载操作
         },
       ],
-      depthStencilAttachment: this.depthStencilAttachment
+      depthStencilAttachment: this.depthStencilAttachment,
     }); // 开始渲染通道
 
     // `setPipeline`方法用于设置渲染通道中使用的管线。管线定义了渲染操作的状态和行为，包括着色器、颜色混合、剔除等¹。
     // `setBindGroup`方法用于设置渲染通道中使用的资源绑定组。资源绑定组定义了一组要绑定在一起的资源以及这些资源在着色器阶段中的使用方式¹。
 
     renderPass.setPipeline(this.pipeline); // 设置管线
-    renderPass.setVertexBuffer(0, this.triangleMesh.buffer);
 
-    renderPass.setBindGroup(0, this.bindGroup); // 设置绑定组
-    renderPass.draw(3, triangle_count, 0, 0); // 绘制
+    let object_drawn = 0;
+
+    // Triangles
+    renderPass.setVertexBuffer(0, this.triangleMesh.buffer);
+    renderPass.setBindGroup(0, this.triangleBindGroup); // 设置绑定组
+    renderPass.draw(
+      3,
+      renderables.object_counts[object_types.TRIANGLE],
+      0,
+      object_drawn
+    ); // 绘制
+    object_drawn += renderables.object_counts[object_types.TRIANGLE]
+
+    // Quads
+    renderPass.setVertexBuffer(0, this.quadMesh.buffer);
+    renderPass.setBindGroup(0, this.quadBindGroup); // 设置绑定组
+    renderPass.draw(
+      6,
+      renderables.object_counts[object_types.QUAD],
+      0,
+      object_drawn
+    ); // 绘制
+    object_drawn += renderables.object_counts[object_types.QUAD]
 
     // renderPass.draw(3, 1, 0); // 绘制
 
