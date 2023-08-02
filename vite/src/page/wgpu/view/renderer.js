@@ -15,11 +15,15 @@ export class Renderer {
   async Initialize() {
     await this.setupDevice();
 
+    await this.makeBindGroupLayouts();
+
     await this.createAssets();
 
     await this.makeDepthBufferResources();
 
     await this.makePipeline();
+
+    await this.makeBindGroup();
   }
 
   async setupDevice() {
@@ -81,9 +85,8 @@ export class Renderer {
     };
   }
 
-  async makePipeline() {
-    // 创建绑定组布局
-    const bindGroupLayout = this.device.createBindGroupLayout({
+  async makeBindGroupLayouts() {
+    this.frameGroupLayout = this.device.createBindGroupLayout({
       entries: [
         {
           // 条目
@@ -93,16 +96,6 @@ export class Renderer {
         },
         {
           binding: 1,
-          visibility: GPUShaderStage.FRAGMENT,
-          texture: {},
-        },
-        {
-          binding: 2,
-          visibility: GPUShaderStage.FRAGMENT,
-          sampler: {},
-        },
-        {
-          binding: 3,
           visibility: GPUShaderStage.VERTEX,
           buffer: {
             type: "read-only-storage",
@@ -111,65 +104,27 @@ export class Renderer {
         },
       ],
     });
-
-    // 创建绑定组,定义在着色器阶段的使用方式
-    this.triangleBindGroup = this.device.createBindGroup({
-      layout: bindGroupLayout, // 绑定组布局
+    this.materialGroupLayout = this.device.createBindGroupLayout({
       entries: [
         {
+          // 条目
           binding: 0, // 绑定点
-          resource: {
-            // 资源
-            buffer: this.uniformBuffer,
-          },
+          visibility: GPUShaderStage.FRAGMENT, // 可见性
+          texture: {},
         },
         {
-          binding: 1, // 绑定点
-          resource: this.triangleMaterial.view,
-        },
-        {
-          binding: 2, // 绑定点
-          resource: this.triangleMaterial.sampler,
-        },
-        {
-          binding: 3, // 绑定点
-          resource: {
-            buffer: this.objectBuffer,
-          },
+          binding: 1,
+          visibility: GPUShaderStage.FRAGMENT,
+          sampler: {}
         },
       ],
     });
+  }
 
-    this.quadBindGroup = this.device.createBindGroup({
-      layout: bindGroupLayout, // 绑定组布局
-      entries: [
-        {
-          binding: 0, // 绑定点
-          resource: {
-            // 资源
-            buffer: this.uniformBuffer,
-          },
-        },
-        {
-          binding: 1, // 绑定点
-          resource: this.quadMaterial.view,
-        },
-        {
-          binding: 2, // 绑定点
-          resource: this.quadMaterial.sampler,
-        },
-        {
-          binding: 3, // 绑定点
-          resource: {
-            buffer: this.objectBuffer,
-          },
-        },
-      ],
-    });
-
+  async makePipeline() {
     // 创建管线布局
     const pipelineLayout = this.device.createPipelineLayout({
-      bindGroupLayouts: [bindGroupLayout], // 绑定组布局
+      bindGroupLayouts: [this.frameGroupLayout, this.materialGroupLayout], // 绑定组布局
     });
 
     // 创建渲染管线
@@ -223,8 +178,28 @@ export class Renderer {
       // mappedAtCreation:
     });
 
-    await this.triangleMaterial.initialize(this.device, "/bg.jpeg");
-    await this.quadMaterial.initialize(this.device, "/bg.jpeg");
+    await this.triangleMaterial.initialize(this.device, "/bg.jpeg", this.materialGroupLayout);
+    await this.quadMaterial.initialize(this.device, "/bj1.jpg", this.materialGroupLayout);
+  }
+
+  async makeBindGroup() {
+    this.frameBindGroup = this.device.createBindGroup({
+      layout: this.frameGroupLayout, // 绑定组布局
+      entries: [
+        {
+          binding: 0, // 绑定点
+          resource: {
+            buffer: this.uniformBuffer,
+          },
+        },
+        {
+          binding: 1, // 绑定点
+          resource: {
+            buffer: this.objectBuffer,
+          },
+        },
+      ],
+    })
   }
 
   async render(renderables) {
@@ -262,30 +237,31 @@ export class Renderer {
     // `setBindGroup`方法用于设置渲染通道中使用的资源绑定组。资源绑定组定义了一组要绑定在一起的资源以及这些资源在着色器阶段中的使用方式¹。
 
     renderPass.setPipeline(this.pipeline); // 设置管线
+    renderPass.setBindGroup(0, this.frameBindGroup);
 
     let object_drawn = 0;
 
     // Triangles
     renderPass.setVertexBuffer(0, this.triangleMesh.buffer);
-    renderPass.setBindGroup(0, this.triangleBindGroup); // 设置绑定组
+    renderPass.setBindGroup(1, this.triangleMaterial.bindGroup); // 设置绑定组
     renderPass.draw(
       3,
       renderables.object_counts[object_types.TRIANGLE],
       0,
       object_drawn
     ); // 绘制
-    object_drawn += renderables.object_counts[object_types.TRIANGLE]
+    object_drawn += renderables.object_counts[object_types.TRIANGLE];
 
     // Quads
     renderPass.setVertexBuffer(0, this.quadMesh.buffer);
-    renderPass.setBindGroup(0, this.quadBindGroup); // 设置绑定组
+    renderPass.setBindGroup(1, this.quadMaterial.bindGroup); // 设置绑定组
     renderPass.draw(
       6,
       renderables.object_counts[object_types.QUAD],
       0,
       object_drawn
     ); // 绘制
-    object_drawn += renderables.object_counts[object_types.QUAD]
+    object_drawn += renderables.object_counts[object_types.QUAD];
 
     // renderPass.draw(3, 1, 0); // 绘制
 

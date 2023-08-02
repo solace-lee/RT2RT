@@ -2,10 +2,11 @@ export class Material {
   // texture: GPUTextture
   // view: GPUTexttureView
   // sampler: GPUSampler
+  // bindGroup: GPUBindGroup
 
-  constructor() {}
+  constructor() { }
 
-  async initialize(device, url) {
+  async initialize(device, url, bindGroupLayout) {
     const response = await fetch(url);
     const blob = await response.blob();
     const imageData = await createImageBitmap(blob);
@@ -32,7 +33,21 @@ export class Material {
       maxAnisotropy: 1,
     };
 
-    this.sampler = device.createSampler(samplerDescriptor);
+    this.sampler = await device.createSampler(samplerDescriptor);
+
+    this.bindGroup = device.createBindGroup({
+      layout: bindGroupLayout, // 绑定组布局
+      entries: [
+        {
+          binding: 0, // 绑定点
+          resource: this.view,
+        },
+        {
+          binding: 1, // 绑定点
+          resource: this.sampler,
+        },
+      ],
+    });
   }
 
   async loadImageBitmap(device, imageData) {
