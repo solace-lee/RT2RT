@@ -4,6 +4,7 @@ import TriangleMesh from "./triangle_mesh";
 import QuadMesh from "./quad_mesh";
 import { mat4 } from "gl-matrix";
 import { object_types } from "../model/definitions";
+import ObjMesh from "./obj_mesh";
 
 // window.mat4 = mat4;
 // console.log(mat4);
@@ -115,7 +116,7 @@ export class Renderer {
         {
           binding: 1,
           visibility: GPUShaderStage.FRAGMENT,
-          sampler: {}
+          sampler: {},
         },
       ],
     });
@@ -165,6 +166,8 @@ export class Renderer {
     this.triangleMaterial = new Material();
     this.quadMesh = new QuadMesh(this.device);
     this.quadMaterial = new Material();
+    this.statueMesh = new ObjMesh();
+    await this.statueMesh.initialize(this.device, "/obj/statue.obj");
 
     const modelBufferDescriptor = {
       size: 64 * 1024,
@@ -178,8 +181,16 @@ export class Renderer {
       // mappedAtCreation:
     });
 
-    await this.triangleMaterial.initialize(this.device, "/bg.jpeg", this.materialGroupLayout);
-    await this.quadMaterial.initialize(this.device, "/bj1.jpg", this.materialGroupLayout);
+    await this.triangleMaterial.initialize(
+      this.device,
+      "/bg.jpeg",
+      this.materialGroupLayout
+    );
+    await this.quadMaterial.initialize(
+      this.device,
+      "/bj1.jpg",
+      this.materialGroupLayout
+    );
   }
 
   async makeBindGroup() {
@@ -199,7 +210,7 @@ export class Renderer {
           },
         },
       ],
-    })
+    });
   }
 
   async render(renderables) {
@@ -262,6 +273,17 @@ export class Renderer {
       object_drawn
     ); // 绘制
     object_drawn += renderables.object_counts[object_types.QUAD];
+
+    // Statue
+    renderPass.setVertexBuffer(0, this.statueMesh.buffer);
+    renderPass.setBindGroup(1, this.triangleMaterial.bindGroup); // 设置绑定组
+    renderPass.draw(
+      this.statueMesh.vertexCount,
+      1,
+      0,
+      object_drawn
+    ); // 绘制
+    object_drawn += 1;
 
     // renderPass.draw(3, 1, 0); // 绘制
 

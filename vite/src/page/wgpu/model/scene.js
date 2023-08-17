@@ -2,7 +2,8 @@ import { Triangle } from "./triangle";
 import { Quad } from "./quad";
 import { Camera } from "./camera";
 import { vec3, mat4 } from "gl-matrix";
-import { object_types } from './definitions'
+import { object_types } from "./definitions";
+import { Statue } from "./statue";
 
 export class Scene {
   // triangles: Triangle[];
@@ -21,6 +22,8 @@ export class Scene {
 
     this.make_triangles();
     this.make_quads();
+
+    this.statue = new Statue([0, 0, 0], [0, 0, 0]);
 
     this.player = new Camera([-2, 0, 0.5], 0, 0);
   }
@@ -45,17 +48,16 @@ export class Scene {
     for (var x = -10; x <= 10; x++) {
       for (let y = -10; y <= 10; y++) {
         this.quads.push(new Quad([x, y, 0]));
-  
+
         let blank_matrix = mat4.create();
         for (let j = 0; j < 16; j++) {
           this.object_data[16 * i + j] = blank_matrix.at(j);
         }
-  
+
         i++;
         this.quad_count++;
       }
     }
-    
   }
 
   update() {
@@ -78,6 +80,14 @@ export class Scene {
       }
       i++;
     });
+
+    this.statue.update();
+    let model = this.statue.get_model();
+    for (let j = 0; j < 16; j++) {
+      this.object_data[16 * i + j] = model.at(j);
+    }
+    i++;
+
     this.player.update();
   }
 
@@ -117,8 +127,8 @@ export class Scene {
       model_transform: this.object_data,
       object_counts: {
         [object_types.TRIANGLE]: this.triangle_count,
-        [object_types.QUAD]: this.quad_count
-      }
+        [object_types.QUAD]: this.quad_count,
+      },
     };
   }
 }
