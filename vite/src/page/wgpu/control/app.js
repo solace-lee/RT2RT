@@ -29,7 +29,8 @@ export class App {
     this.scene.move_player(this.forwards_amount, this.right_amount);
 
     this.renderer.render(
-      this.scene.get_renderables()
+      this.scene.get_renderables(),
+      this.scene.player
     );
 
     if (running) {

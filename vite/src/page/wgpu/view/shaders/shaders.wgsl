@@ -15,24 +15,24 @@ struct ObjectData {
 @binding(1) @group(1) var mySampler: sampler;
 
 struct Fragment {
-  @builtin(position) Position : vec4<f32>,
-  @location(0) TexCoord : vec2<f32>,
+  @builtin(position) Position: vec4<f32>,
+  @location(0) TexCoord: vec2<f32>,
 };
 
 @vertex
 fn vs_main(
-  @builtin(instance_index) id: u32,
-  @location(0) vertexPosition: vec3<f32>,
-  @location(1) vertexTextCoord: vec2<f32>,
+    @builtin(instance_index) id: u32,
+    @location(0) vertexPosition: vec3<f32>,
+    @location(1) vertexTextCoord: vec2<f32>,
 ) -> Fragment {
 
-  var output : Fragment;
-  output.Position = tranformUBO.projection * tranformUBO.view * objects.model[id] * vec4<f32>(vertexPosition, 1.0);
-  output.TexCoord = vertexTextCoord;
-  return output;
-};
+    var output: Fragment;
+    output.Position = tranformUBO.projection * tranformUBO.view * objects.model[id] * vec4<f32>(vertexPosition, 1.0);
+    output.TexCoord = vertexTextCoord;
+    return output;
+}
 
 @fragment
 fn fs_main(@location(0) TexCoord: vec2<f32>) -> @location(0) vec4<f32> {
-  return textureSample(myTexture, mySampler, TexCoord);
-};
+    return textureSample(myTexture, mySampler, TexCoord);
+}

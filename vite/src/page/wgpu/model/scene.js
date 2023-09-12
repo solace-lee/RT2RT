@@ -124,7 +124,7 @@ export class Scene {
   get_renderables() {
     return {
       view_transform: this.player.get_view(),
-      model_transform: this.object_data,
+      model_transforms: this.object_data,
       object_counts: {
         [object_types.TRIANGLE]: this.triangle_count,
         [object_types.QUAD]: this.quad_count,
