@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'
 import { Renderer } from './renderer'
+import { Scene } from "./scene";
 
 function Wgpu() {
   const gpuIsSupported = navigator.gpu ? true : false;
@@ -16,7 +17,8 @@ function Wgpu() {
   // 初始化
   async function Initialize() {
     const canvas = document.getElementById('gfx-main'); // 获取canvas
-    const renderer = await new Renderer(canvas).Initialize()
+    const scene = new Scene();
+    const renderer = await new Renderer(canvas, scene).Initialize()
   }
 
 

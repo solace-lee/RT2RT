@@ -1,11 +1,37 @@
 import raytracer_kernel from "./shaders/raytracer_kernel.wgsl";
 import screen_shader from "./shaders/screen_shader.wgsl";
-import { mat4 } from "gl-matrix";
+// import { Scene } from './scene'
+// import * as matrix from "gl-matrix";
+
+// window.matrix = matrix
+
+// const a = matrix.mat4.create()
+// // matrix.mat4.set(a,
+// //   0.9999251365661621, 0.005850422196090221, -0.01074779313057661, 7.479354381561279,
+// //   -0.0060952771455049515, 0.9997193813323975, -0.0228921789675951, -190.7123260498047,
+// //   0.010610847733914852, 0.02295597456395626, 0.9996801614761353, -1.3054922819137573,
+// //   0, 0, 0, 1)
+// matrix.mat4.set(a,
+//   0.9999251365661621,    -0.0060952771455049515, 0.010610847733914852, 0,
+//   0.005850422196090221,  0.9997193813323975,     0.02295597456395626,  0,
+//   -0.01074779313057661,  -0.0228921789675951,    0.9996801614761353,   0,
+//   7.479354381561279,     -190.7123260498047,     -1.3054922819137573,  1
+// )
+// const b = matrix.vec3.create()
+// matrix.mat4.getRotation(b, a)
+// const c = matrix.vec3.create()
+// matrix.mat4.getScaling(c, a)
+// const d = matrix.vec3.create()
+// matrix.mat4.getTranslation(d, a)
+// console.log(a, '旋转：', b, '缩放：', c, '平移：', d, '哈哈哈');
+
+
+
 
 export class Renderer {
-  constructor(canvas) {
+  constructor(canvas, scene) {
     this.canvas = canvas;
-    this.t = 0.0;
+    this.scene = scene
   }
 
   async Initialize() {
@@ -51,6 +77,21 @@ export class Renderer {
               format: 'rgba8unorm',
               viewDimension: '2d'
             }
+          },
+          {
+            binding: 1,
+            visibility: GPUShaderStage.COMPUTE,
+            buffer: {
+              type: 'uniform'
+            }
+          },
+          {
+            binding: 2,
+            visibility: GPUShaderStage.COMPUTE,
+            buffer: {
+              type: 'read-only-storage',
+              hasDynamicOffset: false
+            }
           }
         ]
       }
@@ -63,6 +104,18 @@ export class Renderer {
           {
             binding: 0,
             resource: this.color_buffer_view
+          },
+          {
+            binding: 1,
+            resource: {
+              buffer: this.sceneParameters,
+            }
+          },
+          {
+            binding: 2,
+            resource: {
+              buffer: this.sphereBuffer
+            }
           }
         ]
       }
@@ -189,41 +242,102 @@ export class Renderer {
     }
 
     this.sampler = this.device.createSampler(samplerDescriptor);
+
+    const parameterBufferDescriptor = {
+      size: 64,
+      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+    }
+    this.sceneParameters = this.device.createBuffer(parameterBufferDescriptor)
+
+    const sphereBufferDescriptor = {
+      size: 32 * this.scene.spheres.length,
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
+    }
+
+    this.sphereBuffer = this.device.createBuffer(
+      sphereBufferDescriptor
+    )
+  }
+
+  prepareScene() {
+
+    const sceneData = {
+      cameraPos: this.scene.camera.position,
+      cameraForwards: this.scene.camera.forwards,
+      cameraRight: this.scene.camera.right,
+      cameraUp: this.scene.camera.up,
+      sphereCount: this.scene.spheres.length,
+    }
+    this.device.queue.writeBuffer(
+      this.sceneParameters, 0,
+      new Float32Array(
+        [
+          sceneData.cameraPos[0],
+          sceneData.cameraPos[1],
+          sceneData.cameraPos[2],
+          0.0,
+          sceneData.cameraForwards[0],
+          sceneData.cameraForwards[1],
+          sceneData.cameraForwards[2],
+          0.0,
+          sceneData.cameraRight[0],
+          sceneData.cameraRight[1],
+          sceneData.cameraRight[2],
+          0.0,
+          sceneData.cameraUp[0],
+          sceneData.cameraUp[1],
+          sceneData.cameraUp[2],
+          sceneData.sphereCount
+        ]
+      ), 0, 16
+    )
+
+    const sphereData = new Float32Array(8 * this.scene.spheres.length);
+    for (let i = 0; i < this.scene.spheres.length; i++) {
+      sphereData[8 * i] = this.scene.spheres[i].center[0];
+      sphereData[8 * i + 1] = this.scene.spheres[i].center[1];
+      sphereData[8 * i + 2] = this.scene.spheres[i].center[2];
+      sphereData[8 * i + 3] = 0.0;
+      sphereData[8 * i + 4] = this.scene.spheres[i].color[0];
+      sphereData[8 * i + 5] = this.scene.spheres[i].color[1];
+      sphereData[8 * i + 6] = this.scene.spheres[i].color[2];
+      sphereData[8 * i + 7] = this.scene.spheres[i].radius;
+    }
+
+    this.device.queue.writeBuffer(this.sphereBuffer, 0, sphereData, 0, 8 * this.scene.spheres.length);
   }
 
   render = () => {
-    const commandEncoder = this.device.createCommandEncoder(); // 创建命令编码器
+    this.prepareScene();
 
-    const ray_trace_pass = commandEncoder.beginComputePass()
-    ray_trace_pass.setPipeline(this.ray_tracing_pipeline)
-    ray_trace_pass.setBindGroup(0, this.ray_tracing_bind_group)
-    ray_trace_pass.dispatchWorkgroups(this.canvas.width, this.canvas.height, 1)
-    ray_trace_pass.end()
+    const commandEncoder = this.device.createCommandEncoder();
 
+    const ray_trace_pass = commandEncoder.beginComputePass();
+    ray_trace_pass.setPipeline(this.ray_tracing_pipeline);
+    ray_trace_pass.setBindGroup(0, this.ray_tracing_bind_group);
+    ray_trace_pass.dispatchWorkgroups(
+      Math.ceil(this.canvas.width / 8),
+      Math.ceil(this.canvas.height / 8), 1);
+    ray_trace_pass.end();
 
-    const renderPass = commandEncoder.beginRenderPass({
-      // 渲染通道描述符
-      colorAttachments: [
-        {
-          view: this.context.getCurrentTexture().createView(), // 获取纹理视图
-          loadValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 }, // 加载值
-          storeOp: "store", // 存储操作
-          loadOp: "clear", // 加载操作
-        },
-      ],
-    }); // 开始渲染通道
+    const textureView = this.context.getCurrentTexture().createView();
+    const renderpass = commandEncoder.beginRenderPass({
+      colorAttachments: [{
+        view: textureView,
+        clearValue: { r: 0.5, g: 0.0, b: 0.25, a: 1.0 },
+        loadOp: "clear",
+        storeOp: "store"
+      }]
+    });
 
-    // `setPipeline`方法用于设置渲染通道中使用的管线。管线定义了渲染操作的状态和行为，包括着色器、颜色混合、剔除等¹。
-    // `setBindGroup`方法用于设置渲染通道中使用的资源绑定组。资源绑定组定义了一组要绑定在一起的资源以及这些资源在着色器阶段中的使用方式¹。
+    renderpass.setPipeline(this.screen_pipeline);
+    renderpass.setBindGroup(0, this.screen_bind_group);
+    renderpass.draw(6, 1, 0, 0);
 
-    renderPass.setPipeline(this.screen_pipeline); // 设置管线
-    renderPass.setBindGroup(0, this.screen_bind_group); // 设置绑定组
-    // renderPass.setVertexBuffer(0, this.triangleMesh.buffer);
-    renderPass.draw(6, 1, 0, 0); // 绘制
-    // renderPass.draw(3); // 绘制
-    renderPass.end(); // 结束
-    this.device.queue.submit([commandEncoder.finish()]); // 提交
+    renderpass.end();
 
-    requestAnimationFrame(this.render)
+    this.device.queue.submit([commandEncoder.finish()]);
+
+    requestAnimationFrame(this.render);
   }
 }
