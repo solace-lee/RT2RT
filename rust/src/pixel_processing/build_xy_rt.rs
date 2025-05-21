@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize};
+use serde::{de::value, Deserialize, Serialize};
 
 use crate::init_data::calc_rt_bounds::Bounds;
 
@@ -29,7 +29,7 @@ pub struct RTContours {
 }
 
 // 基于线数据构建层mask
-pub fn generate_mask(line: Vec<Vec<i32>>, bounds: &Bounds) -> RTMask {
+pub fn generate_mask(mask_volume: Vec<i8>, bounds: &Bounds) -> RTMask {
     let Bounds {
         x,
         y,
@@ -65,66 +65,58 @@ pub fn generate_mask(line: Vec<Vec<i32>>, bounds: &Bounds) -> RTMask {
         ],
     };
 
-    for z in 0..line.len() {
-        let layer_coords = &line[z]; // z层数
-
-        for line_index in 0..(layer_coords.len() / 3) as usize {
-            let line_x_start = &layer_coords[line_index * 3];
-            let line_x_end = &layer_coords[line_index * 3 + 1];
-            let line_y = &layer_coords[line_index * 3 + 2];
-            // 处理X切面
-            let x_slice_begin_position = ((*line_x_start as f64).ceil()) as isize;
-            let x_slice_end_position = ((*line_x_end as f64).ceil()) as isize;
-
-            // 计算Y切面对应Y的层数
-            let y_layer_index = (*line_y as f64 / y_layer).round() as usize;
-
-            let y_px = *line_y as isize; // Y 坐标
-
-            for x_slice_layer in x_slice_begin_position..x_slice_end_position {
-                // X 坐标
-
-                // 计算X切面对应X的层数
-                let x_layer_index = (x_slice_layer as f64 / x_layer).round() as usize;
-
-                // 生成Y切面
-                if (*line_y as f64 - (y_layer * y_layer_index as f64)).abs() < 0.5 {
-                    result.y_rt[y_layer_index]
-                        [(z as isize * *x as isize + x_slice_layer) as usize] = 1;
-                    // 记录mask的边界
-                    // Y
-                    if result.y_bounds[y_layer_index].minx > x_slice_layer {
-                        result.y_bounds[y_layer_index].minx = x_slice_layer
-                    }
-                    if result.y_bounds[y_layer_index].maxx < x_slice_layer {
-                        result.y_bounds[y_layer_index].maxx = x_slice_layer
-                    }
-                    if result.y_bounds[y_layer_index].miny > z as isize {
-                        result.y_bounds[y_layer_index].miny = z as isize
-                    }
-                    if result.y_bounds[y_layer_index].maxy < z as isize {
-                        result.y_bounds[y_layer_index].maxy = z as isize
-                    }
-                }
-                // 生成X切面
-                if (x_slice_layer as f64 - (x_layer * x_layer_index as f64)).abs() < 0.5 {
-                    result.x_rt[x_layer_index][(z as isize * *y as isize + y_px) as usize] = 1;
-                    // 记录mask的边界
-                    if result.x_bounds[x_layer_index].minx > y_px {
-                        result.x_bounds[x_layer_index].minx = y_px
-                    }
-                    if result.x_bounds[x_layer_index].maxx < y_px {
-                        result.x_bounds[x_layer_index].maxx = y_px
-                    }
-                    if result.x_bounds[x_layer_index].miny > z as isize {
-                        result.x_bounds[x_layer_index].miny = z as isize
-                    }
-                    if result.x_bounds[x_layer_index].maxy < z as isize {
-                        result.x_bounds[x_layer_index].maxy = z as isize
-                    }
-                }
+    for z_num in 0..*z {
+      let z_lay = z_num * x * y;
+      for y_num in 0..*y {
+        let current_y_layer = (y_num as f64 / y_layer).ceil();
+        let y_lay = y_num * x;
+        for x_num in 0..*x {
+          let index = z_lay + y_lay + x_num;
+          let value = mask_volume[index as usize];
+          if value == 0 {
+            continue;
+          }
+          // 生成x切面
+          let current_x_layer = (x_num as f64 / x_layer).ceil();
+          let is_x_true = current_x_layer * x_layer == x_num as f64;
+          if is_x_true {
+            let x_bounds = &mut result.x_bounds[current_x_layer as usize];
+            if x_bounds.minx > y_num as isize {
+              x_bounds.minx = y_num as isize;
             }
+            if x_bounds.maxx < y_num as isize {
+              x_bounds.maxx = y_num as isize;
+            }
+            if x_bounds.miny > z_num as isize {
+              x_bounds.miny = z_num as isize;
+            }
+            if x_bounds.maxy < z_num as isize {
+              x_bounds.maxy = z_num as isize;
+            }
+            result.x_rt[current_x_layer as usize][(z_num * *y + y_num) as usize] = 1;
+          }
+
+          // 生成y切面
+          let is_y_true = current_y_layer * y_layer == y_num as f64;
+          if is_y_true {
+            let y_bounds = &mut result.y_bounds[current_y_layer as usize];
+            if y_bounds.minx > x_num as isize {
+              y_bounds.minx = x_num as isize;
+            }
+            if y_bounds.maxx < x_num as isize {
+              y_bounds.maxx = x_num as isize;
+            }
+            if y_bounds.miny > z_num as isize {
+              y_bounds.miny = z_num as isize;
+            }
+            if y_bounds.maxy < z_num as isize {
+              y_bounds.maxy = z_num as isize;
+            }
+            result.y_rt[current_y_layer as usize][(z_num * *x + x_num) as usize] = 1;
+          }
+          
         }
+      }
     }
     return result;
 }

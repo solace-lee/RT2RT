@@ -1,4 +1,4 @@
-use crate::init_data::calc_rt_bounds::{BoundsLimit, PixelCoods, PxData};
+use crate::init_data::calc_rt_bounds::{Bounds, BoundsLimit, PixelCoods, PxData};
 
 use std::cell::RefCell;
 
@@ -20,7 +20,7 @@ pub struct AET {
     lines: RefCell<Vec<TagEdge>>,
 }
 
-pub fn scan_line(rs: PxData) -> Vec<Vec<i32>> {
+pub fn scan_line(rs: PxData, bounds: &Bounds) -> Vec<i8> {
     let PxData {
         data,
         // bounds,
@@ -28,15 +28,15 @@ pub fn scan_line(rs: PxData) -> Vec<Vec<i32>> {
         ..
     } = rs;
 
-    let mut result: Vec<Vec<i32>> = Vec::new();
+    let mut result: Vec<i8> = Vec::new();
     for index in 0..data.len() {
         let layer = &data[index];
         let item_bounds = &layer_bounds[index];
 
         // 归档活动边表
         let aet = init_net(layer, item_bounds);
-        let line_result = process_scan_line_fill(aet, item_bounds);
-        result.push(line_result);
+        let layer_mask = process_scan_line_fill(aet, item_bounds, &bounds);
+        result.extend(layer_mask.into_iter());
         // println!("第{}层, 共{}层", index, data.len())
     }
     return result;
@@ -95,13 +95,15 @@ fn init_net(layer_coords: &Vec<Vec<PixelCoods>>, item_bounds: &BoundsLimit) -> A
 fn process_scan_line_fill(
     AET { sl_net, lines }: AET,
     item_bounds: &BoundsLimit,
-) -> Vec<i32> {
+    bounds: &Bounds,
+) -> Vec<i8> {
     let next_edge = RefCell::new(NextEdge {
         next: vec![-1; lines.borrow().len()],
         head: -1,
     });
 
-    let mut line_result: Vec<i32> = Vec::new();
+    let layer_size: usize = (bounds.x * bounds.y) as usize;
+    let mut layer_mask: Vec<i8> = vec![0; layer_size];
 
     let insert = |y: i32| {
         for i in 0..sl_net[y as usize].len() {
@@ -239,13 +241,17 @@ fn process_scan_line_fill(
                     break;
                 };
                 if current_edge.next[i as usize] != -1 {
-                    // x: first
-                    line_result.push(lines.borrow()[i as usize].xi as i32);
-                    // x: second
-                    line_result
-                        .push(lines.borrow()[current_edge.next[i as usize] as usize].xi as i32);
-                    // y
-                    line_result.push(y);
+                    let start_index = lines.borrow()[i as usize].xi as i32 + y * bounds.x as i32;
+                    let end_index = lines.borrow()[current_edge.next[i as usize] as usize].xi
+                        as i32
+                        + y * bounds.x as i32;
+                    for j in start_index..end_index {
+                        if layer_mask[j as usize] == 1 {
+                            layer_mask[j as usize] = 1;
+                        } else {
+                           layer_mask[j as usize] = 0;
+                        }
+                    }
                 }
                 if current_edge.next[i as usize] == -1 {
                     break;
@@ -259,5 +265,5 @@ fn process_scan_line_fill(
         update_aet();
     }
 
-    return line_result;
+    return layer_mask;
 }
