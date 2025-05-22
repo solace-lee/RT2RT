@@ -1,4 +1,7 @@
-use crate::init_data::calc_rt_bounds::{Bounds, BoundsLimit, PixelCoods, PxData};
+use crate::init_data::{
+    calc_rt_bounds::{BoundsLimit, PixelCoods, PxData},
+    init_json::ImageInfo,
+};
 
 use std::cell::RefCell;
 
@@ -20,7 +23,7 @@ pub struct AET {
     lines: RefCell<Vec<TagEdge>>,
 }
 
-pub fn scan_line(rs: PxData, bounds: &Bounds) -> Vec<i8> {
+pub fn scan_line(rs: PxData, image_info: &ImageInfo) -> Vec<i8> {
     let PxData {
         data,
         // bounds,
@@ -35,9 +38,12 @@ pub fn scan_line(rs: PxData, bounds: &Bounds) -> Vec<i8> {
 
         // 归档活动边表
         let aet = init_net(layer, item_bounds);
-        let layer_mask = process_scan_line_fill(aet, item_bounds, bounds);
+        let layer_mask = process_scan_line_fill(aet, item_bounds, image_info);
+        // if index == 40 {
+        // println!("第{}层, 共{:?}层", index, layer_mask)
+        // output(&layer_mask, "./json/layer_mask.json");
+        // }
         result.extend(layer_mask.into_iter());
-        // println!("第{}层, 共{}层", index, data.len())
     }
     result
 }
@@ -95,14 +101,14 @@ fn init_net(layer_coords: &[Vec<PixelCoods>], item_bounds: &BoundsLimit) -> AET 
 fn process_scan_line_fill(
     AET { sl_net, lines }: AET,
     item_bounds: &BoundsLimit,
-    bounds: &Bounds,
+    image_info: &ImageInfo,
 ) -> Vec<i8> {
     let next_edge = RefCell::new(NextEdge {
         next: vec![-1; lines.borrow().len()],
         head: -1,
     });
 
-    let layer_size: usize = (bounds.x * bounds.y) as usize;
+    let layer_size: usize = (image_info.column * image_info.row) as usize;
     let mut layer_mask: Vec<i8> = vec![0; layer_size];
 
     let insert = |y: i32| {
@@ -239,15 +245,17 @@ fn process_scan_line_fill(
                     break;
                 };
                 if current_edge.next[i as usize] != -1 {
-                    let start_index = lines.borrow()[i as usize].xi as i32 + y * bounds.x as i32;
+                    let start_index =
+                        lines.borrow()[i as usize].xi as i32 + y * image_info.column as i32;
                     let end_index = lines.borrow()[current_edge.next[i as usize] as usize].xi
                         as i32
-                        + y * bounds.x as i32;
+                        + y * image_info.column as i32;
                     for j in start_index..end_index {
+                        // print!("像素{} ", layer_mask[j as usize]);
                         if layer_mask[j as usize] == 1 {
-                            layer_mask[j as usize] = 1;
-                        } else {
                             layer_mask[j as usize] = 0;
+                        } else {
+                            layer_mask[j as usize] = 1;
                         }
                     }
                 }
