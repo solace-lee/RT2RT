@@ -1,4 +1,4 @@
-use std::isize;
+// use std::isize;
 
 use serde::{Deserialize, Serialize};
 
@@ -20,7 +20,7 @@ struct PreMask {
     offset_y: isize,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Contours {
     pub inner: bool,
     pub label: isize,
@@ -136,7 +136,7 @@ pub fn trace_contours(mask: Mask) -> Vec<Contours> {
                                 dest[k1 as usize] = -1;
                                 next.2 = false
                             }
-                            if next.2 == false {
+                            if !next.2 {
                                 break;
                             }
                             current.0 = next.0;
@@ -177,38 +177,38 @@ pub fn trace_contours(mask: Mask) -> Vec<Contours> {
     contours
 }
 
-pub fn simplify_contours (contours: Vec<Contours>, simplifyTolerant: f64, simplifyCount: f64) -> Vec<Contours> {
-    let mut i: usize;
-    let mut j: usize;
+pub fn simplify_contours (contours: &mut Vec<Contours>, simplify_tolerant: f64, simplify_count: f64) -> &mut Vec<Contours> {
+    // let mut i: usize;
+    // let mut j: usize;
     let mut k: usize;
-    let mut x: f64;
-    let mut y: f64;
-    let mut x0: f64;
-    let mut y0: f64;
-    let mut x1: f64;
-    let mut y1: f64;
-    let mut x2: f64;
-    let mut y2: f64;
+    // let mut x: f64;
+    // let mut y: f64;
+    let mut x0: isize;
+    let mut y0: isize;
+    let mut x1: isize;
+    let mut y1: isize;
+    let mut x2: isize;
+    let mut y2: isize;
     let mut d: f64;
     let mut dmax: f64;
     let mut index: usize;
-    let mut points: Vec<f64>;
+    let mut points: Vec<isize>;
     let mut contour: Contours;
-    let mut simplified: Vec<f64>;
+    let mut simplified: Vec<isize>;
     let mut len: usize;
     let mut count: usize;
-    let mut tolerance: f64 = simplifyTolerant;
-    let mut maxCount: usize = simplifyCount as usize;
+    let mut tolerance: f64 = simplify_tolerant;
+    let max_count: usize = simplify_count as usize;
 
     for i in 0..contours.len() {
-        contour = contours[i];
+        contour = contours[i].clone();
         points = contour.points;
         simplified = Vec::new();
         len = points.len();
         if len < 6 {
             continue;
         }
-        count = maxCount;
+        count = max_count;
         if count > len / 2 {
             count = len / 2;
         }
@@ -255,4 +255,19 @@ pub fn simplify_contours (contours: Vec<Contours>, simplifyTolerant: f64, simpli
     }
     contours
     
+}
+
+fn distance(x0: isize, y0: isize, x1: isize, y1: isize, x2: isize, y2: isize) -> f64 {
+    let dx: isize = x2 - x1;
+    let dy: isize = y2 - y1;
+    let d: f64;
+    let result: f64;
+
+    if dx != 0 {
+        d = dy as f64 / dx as f64;
+        result = (y2 as f64 - y0 as f64 - d * (x2 as f64 - x0 as f64)) / (dx as f64 * dx  as f64+ dy as f64 * dy as f64).sqrt();
+    } else {
+        result = (x2 as f64 - x0 as f64) / (dy as f64 * dy as f64 + dx as f64 * dx as f64).sqrt();
+    }
+    result
 }

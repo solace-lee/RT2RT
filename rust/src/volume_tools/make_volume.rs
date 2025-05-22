@@ -20,12 +20,11 @@ pub mod volume {
 
     impl Volume {
         pub fn new(bounds: Bounds) -> Volume {
-            let volume_str = Volume {
+            Volume {
                 data: RefCell::new(vec![0; (bounds.x * bounds.y * bounds.z) as usize]),
                 bounds,
                 name_map: Vec::new(),
-            };
-            return volume_str;
+            }
         }
 
         /// 修改坐标值
@@ -35,7 +34,7 @@ pub mod volume {
             }
             self.data.borrow_mut()
                 [(z * self.bounds.x * self.bounds.y + y * self.bounds.x + x) as usize] = value;
-            return true;
+            true
         }
 
         /// 获取层数据
@@ -52,17 +51,17 @@ pub mod volume {
                 }
             }
 
-            return data;
+            data
         }
 
         /// 获取层的起始和结束的下标
         pub fn get_layer_position(&self, laynum: u32) -> Position {
             let layerlimit = self.bounds.x * self.bounds.y;
             let begin = laynum * layerlimit;
-            return Position {
+            Position {
                 begin,
                 end: begin + layerlimit,
-            };
+            }
         }
     }
 }

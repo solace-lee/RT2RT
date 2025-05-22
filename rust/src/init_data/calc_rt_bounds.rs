@@ -37,12 +37,6 @@ pub struct BoundsLimit {
     pub max_y: i32,
 }
 
-///寻找XYZ的最小像素间距
-// pub fn find_pixel_spacing(arr: Vec<f64>) -> f64 {
-//     let min = arr.iter().min_by(|x, y| x.partial_cmp(y).unwrap()).unwrap();
-//     *min
-// }
-
 ///计算volume的边界
 pub fn get_volume_bounds(imagainfo: &ImageInfo) -> Bounds {
     let ImageInfo {
@@ -107,12 +101,12 @@ pub fn get_rt_pxdata_and_bounds(imagainfo: &ImageInfo, bounds: &Bounds) -> PxDat
     let max_colume = *column as i32;
     let max_row = *row as i32;
 
-    for index in 0..data.len() { // 遍历每一层
+    for (index, item) in data.iter().enumerate() { // 遍历每一层
         let position_index = (index + z_position_layer_num) % z_position_layer_num;
         let px_position_x = px_position_patient[position_index * 3] as i32;
         let px_position_y = px_position_patient[position_index * 3 + 1] as i32;
         
-        let i = &data[index];
+        let i = item;
         let mut o = Vec::new();
 
         // 单层的轮廓范围
@@ -122,10 +116,10 @@ pub fn get_rt_pxdata_and_bounds(imagainfo: &ImageInfo, bounds: &Bounds) -> PxDat
             min_y: 0,
             max_y: 0,
         };
-        if i.len() != 0 {
+        if !i.is_empty() {
             for j in i {
                 let mut p = Vec::new();
-                if j.len() != 0 {
+                if !j.is_empty() {
                     for k in 0..(j.len() / 2) {
                         let kx = j[k * 2];
                         let ky = j[k * 2 + 1];

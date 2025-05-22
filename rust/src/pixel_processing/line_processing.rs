@@ -1,10 +1,11 @@
+
 use crate::{
     init_data::calc_rt_bounds::{PixelCoods, PxData},
-    volume_tools::volume::{volume::Volume},
+    volume_tools::make_volume::volume::Volume,
 };
 
 /// 验证生成的轮廓是否连续
-fn check_result(begin: usize, end: usize, coords: &Vec<PixelCoods>) -> bool {
+fn check_result(begin: usize, end: usize, coords: &[PixelCoods]) -> bool {
     if begin == end {
         return true;
     }
@@ -43,7 +44,7 @@ fn check_result(begin: usize, end: usize, coords: &Vec<PixelCoods>) -> bool {
         }
         i += 1;
     }
-    return pass;
+    pass
 }
 
 /// 像素插值（结果不包含second）
@@ -78,12 +79,7 @@ fn insert_coord(
     let sub_y = second_y - first_y; // 判断Y方向上的差异
 
     // 取绝对值找到最大的差异
-    let max_count;
-    if sub_y.abs() > sub_x.abs() {
-        max_count = "y"
-    } else {
-        max_count = "x"
-    }
+    let max_count = if sub_y.abs() > sub_x.abs() { "y" } else { "x" };
 
     // 按差异最大的方向开始线性补点
     if max_count == "y" {
@@ -142,8 +138,8 @@ fn insert_coord(
 
     let end = result.len();
     let is_pass = check_result(begin, end, result);
-    if is_pass == false {
-        println!("两点间结果不通过：{}", is_pass.to_string());
+    if !is_pass {
+        println!("两点间结果不通过：{}", is_pass);
     }
 
     // 计算面积并返回
@@ -163,11 +159,11 @@ pub fn closed_line(pixel_data: PxData, translation: PixelCoods, volume: &Volume)
     for layer_num in 0..data.len() {
         if let Some(layer) = data.get(layer_num) {
             let mut layer_result = Vec::new();
-            if layer.len() != 0 {
+            if !layer.is_empty() {
                 // 如果当前层存在轮廓数据
                 for coords in layer {
                     let mut coords_result = Vec::new();
-                    if coords.len() != 0 {
+                    if !coords.is_empty() {
                         // 如果当前轮廓有坐标数据
                         let mut area = 0.0;
 
@@ -219,5 +215,5 @@ pub fn closed_line(pixel_data: PxData, translation: PixelCoods, volume: &Volume)
         }
     }
 
-    return line;
+    line
 }

@@ -35,23 +35,23 @@ pub fn scan_line(rs: PxData, bounds: &Bounds) -> Vec<i8> {
 
         // 归档活动边表
         let aet = init_net(layer, item_bounds);
-        let layer_mask = process_scan_line_fill(aet, item_bounds, &bounds);
+        let layer_mask = process_scan_line_fill(aet, item_bounds, bounds);
         result.extend(layer_mask.into_iter());
         // println!("第{}层, 共{}层", index, data.len())
     }
-    return result;
+    result
 }
 
 // 初始化新边表
-fn init_net(layer_coords: &Vec<Vec<PixelCoods>>, item_bounds: &BoundsLimit) -> AET {
+fn init_net(layer_coords: &[Vec<PixelCoods>], item_bounds: &BoundsLimit) -> AET {
     let mut aet = AET {
         sl_net: vec![Vec::new(); (item_bounds.max_y - item_bounds.min_y) as usize],
         lines: RefCell::new(Vec::new()),
     };
     let mut count = 0;
-    for i in 0..layer_coords.len() {
+    for item in layer_coords {
         // 单个轮廓(同层)
-        let coords_item = &layer_coords[i];
+        let coords_item = item;
         for coord_index in 0..coords_item.len() {
             let start = &coords_item[coord_index];
             let end = &coords_item[(coord_index + 1) % coords_item.len()];
@@ -89,7 +89,7 @@ fn init_net(layer_coords: &Vec<Vec<PixelCoods>>, item_bounds: &BoundsLimit) -> A
         }
     }
 
-    return aet;
+    aet
 }
 
 fn process_scan_line_fill(
@@ -115,23 +115,21 @@ fn process_scan_line_fill(
 
             if next_edge.borrow().head == -1 {
                 next_edge.borrow_mut().head = temp.id as isize;
+            } else if temp.xi < lines.borrow()[next_edge.borrow().head as usize].xi {
+                let mut current_edge = next_edge.borrow_mut();
+                current_edge.next[temp.id] = current_edge.head as isize;
+                current_edge.head = temp.id as isize;
             } else {
-                if temp.xi < lines.borrow()[next_edge.borrow().head as usize].xi {
-                    let mut current_edge = next_edge.borrow_mut();
-                    current_edge.next[temp.id] = current_edge.head as isize;
-                    current_edge.head = temp.id as isize;
-                } else {
-                    let mut pre = next_edge.borrow().head;
-                    let mut j = next_edge.borrow().next[next_edge.borrow().head as usize];
-                    loop {
-                        if j == -1 || temp.xi < lines.borrow()[j as usize].xi {
-                            next_edge.borrow_mut().next[pre as usize] = temp.id as isize;
-                            next_edge.borrow_mut().next[temp.id] = j;
-                            break;
-                        }
-                        pre = j;
-                        j = next_edge.borrow_mut().next[j as usize];
+                let mut pre = next_edge.borrow().head;
+                let mut j = next_edge.borrow().next[next_edge.borrow().head as usize];
+                loop {
+                    if j == -1 || temp.xi < lines.borrow()[j as usize].xi {
+                        next_edge.borrow_mut().next[pre as usize] = temp.id as isize;
+                        next_edge.borrow_mut().next[temp.id] = j;
+                        break;
                     }
+                    pre = j;
+                    j = next_edge.borrow_mut().next[j as usize];
                 }
             }
         }
@@ -249,7 +247,7 @@ fn process_scan_line_fill(
                         if layer_mask[j as usize] == 1 {
                             layer_mask[j as usize] = 1;
                         } else {
-                           layer_mask[j as usize] = 0;
+                            layer_mask[j as usize] = 0;
                         }
                     }
                 }
@@ -265,5 +263,5 @@ fn process_scan_line_fill(
         update_aet();
     }
 
-    return layer_mask;
+    layer_mask
 }

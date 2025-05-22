@@ -1,11 +1,15 @@
 extern crate serde_json;
 
 use std::time::SystemTime;
+mod init_data;
+mod output_json;
+mod pixel_processing;
+mod volume_tools;
 
-use rt2rt::pixel_processing::build_xy_rt::{generate_mask, mask_to_rt};
+use crate::pixel_processing::build_xy_rt::{generate_mask, mask_to_rt};
 // use rt2rt::pixel_processing::line_processing::closed_line;
-use rt2rt::pixel_processing::scan_line::scan_line;
-use rt2rt::{
+use crate::pixel_processing::scan_line::scan_line;
+use crate::{
     init_data::{
         calc_rt_bounds::{get_rt_pxdata_and_bounds, get_volume_bounds},
         init_json,
@@ -27,7 +31,7 @@ fn main() {
 
     let sys_time1 = SystemTime::now();
     // 扫描线算法
-    let line_result = scan_line(rt_pxdata_and_bounds);
+    let mask_volume = scan_line(rt_pxdata_and_bounds, &volume_bounds);
     let sys_time2 = SystemTime::now();
     println!(
         "扫描线算法耗时：{:?}",
@@ -38,7 +42,7 @@ fn main() {
 
     let sys_time1 = SystemTime::now();
     // 生成切面mask轮廓
-    let rt_build_mask = generate_mask(line_result, &volume_bounds);
+    let rt_build_mask = generate_mask(mask_volume, &volume_bounds);
     let sys_time2 = SystemTime::now();
     println!(
         "切面mask耗时：{:?}",
