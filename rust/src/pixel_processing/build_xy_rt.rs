@@ -30,20 +30,6 @@ pub struct RTContours {
     pub y: Vec<Vec<Vec<Point>>>,
 }
 
-fn main() {
-    let contour = vec![
-        Point { x: 1.0, y: 2.0 },
-        Point { x: 3.0, y: 4.0 },
-        Point { x: 5.0, y: 6.0 },
-        Point { x: 7.0, y: 8.0 },
-    ];
-
-    let opts = Options { radius: 2.0 };
-    let smoothed_contour = smooth_by_radius(&contour, &opts);
-
-    println!("{:?}", smoothed_contour);
-}
-
 // 基于线数据构建层mask
 pub fn generate_mask(mask_volume: Vec<i8>, bounds: &ImageInfo) -> RTMask {
     let ImageInfo {
