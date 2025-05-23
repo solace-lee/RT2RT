@@ -27,8 +27,7 @@ pub struct MaskBounds {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RTContours {
     pub x: Vec<Vec<Vec<Point>>>,
-    pub y: Vec<Vec<Vec<Point>>>,
-    pub mask_volume: Vec<i8>,
+    pub y: Vec<Vec<Vec<Point>>>
 }
 
 // 基于线数据构建层mask
@@ -126,13 +125,12 @@ pub fn generate_mask(mask_volume: &Vec<i8>, bounds: &ImageInfo) -> RTMask {
     result
 }
 
-pub fn mask_to_rt(all_mask: RTMask, mask_volume: Vec<i8>, image_info: &ImageInfo) -> RTContours {
+pub fn mask_to_rt(all_mask: RTMask, image_info: &ImageInfo) -> RTContours {
     let ImageInfo {
         column,
         row,
         lay_num,
         pixel_spacing_normalized,
-        return_volume,
         ..
     } = image_info;
 
@@ -145,12 +143,7 @@ pub fn mask_to_rt(all_mask: RTMask, mask_volume: Vec<i8>, image_info: &ImageInfo
 
     let mut result_data = RTContours {
         x: Vec::new(),
-        y: Vec::new(),
-        mask_volume: if *return_volume {
-            mask_volume
-        } else {
-            Vec::new()
-        },
+        y: Vec::new()
     };
 
     // X截面

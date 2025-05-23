@@ -47,7 +47,7 @@ fn main() {
 
     let sys_time1 = SystemTime::now();
     // 轮廓提取
-    let rt_build_result = mask_to_rt(rt_build_mask, mask_volume,&result);
+    let rt_build_result = mask_to_rt(rt_build_mask,&result);
     let sys_time2 = SystemTime::now();
     println!(
         "轮廓提取耗时：{:?}",
