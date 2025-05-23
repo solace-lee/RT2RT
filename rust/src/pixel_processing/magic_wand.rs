@@ -20,11 +20,17 @@ struct PreMask {
     offset_y: isize,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Point {
+    pub x: f64,
+    pub y: f64,
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Contours {
     pub inner: bool,
     pub label: isize,
-    pub points: Vec<isize>,
+    pub points: Vec<Point>,
 }
 
 fn prepare_mask(mask: Mask) -> PreMask {
@@ -86,7 +92,7 @@ pub fn trace_contours(mask: Mask) -> Vec<Contours> {
     let mut y: isize;
     let mut k: isize;
     let mut k1: isize;
-    let mut c: Vec<isize>;
+    let mut c: Vec<Point>;
     let mut inner: bool;
     let mut dir: isize;
     let mut first: (isize, isize);
@@ -152,15 +158,19 @@ pub fn trace_contours(mask: Mask) -> Vec<Contours> {
                             } else {
                                 second = next;
                             }
-                            c.push(previous.0 + dx);
-                            c.push(previous.1 + dy);
+                            c.push(Point {
+                                x: (previous.0 + dx) as f64,
+                                y: (previous.1 + dy) as f64,
+                            });
                             previous = current;
                             dir = (dir + 4) % 8;
                         }
 
                         if next.2 {
-                            c.push(first.0 + dx);
-                            c.push(first.1 + dy);
+                            c.push(Point {
+                                x: (first.0 + dx) as f64,
+                                y: (first.1 + dy) as f64,
+                            });
                             contours.push(Contours {
                                 inner,
                                 label,
@@ -177,97 +187,102 @@ pub fn trace_contours(mask: Mask) -> Vec<Contours> {
     contours
 }
 
-pub fn simplify_contours (contours: &mut Vec<Contours>, simplify_tolerant: f64, simplify_count: f64) -> &mut Vec<Contours> {
-    // let mut i: usize;
-    // let mut j: usize;
-    let mut k: usize;
-    // let mut x: f64;
-    // let mut y: f64;
-    let mut x0: isize;
-    let mut y0: isize;
-    let mut x1: isize;
-    let mut y1: isize;
-    let mut x2: isize;
-    let mut y2: isize;
-    let mut d: f64;
-    let mut dmax: f64;
-    let mut index: usize;
-    let mut points: Vec<isize>;
-    let mut contour: Contours;
-    let mut simplified: Vec<isize>;
-    let mut len: usize;
-    let mut count: usize;
-    let mut tolerance: f64 = simplify_tolerant;
-    let max_count: usize = simplify_count as usize;
 
-    for i in 0..contours.len() {
-        contour = contours[i].clone();
-        points = contour.points;
-        simplified = Vec::new();
-        len = points.len();
-        if len < 6 {
-            continue;
-        }
-        count = max_count;
-        if count > len / 2 {
-            count = len / 2;
-        }
-        if count < 2 {
-            continue;
-        }
-        if tolerance <= 0.0 {
-            tolerance = 0.01;
-        }
-        while count > 2 {
-            dmax = 0.0;
-            index = 0;
-            x0 = points[0];
-            y0 = points[1];
-            x1 = points[len - 2];
-            y1 = points[len - 1];
-            for j in 2..(len - 3) {
-                k = j + 1;
-                x2 = points[k];
-                y2 = points[k + 1];
-                d = distance(x0, y0, x1, y1, x2, y2);
-                if d > dmax {
-                    index = j;
-                    dmax = d;
-                }
-            }
-            if dmax > tolerance {
-                simplified.push(points[index]);
-                simplified.push(points[index + 1]);
-                points.remove(index);
-                points.remove(index);
-                len -= 2;
-                count -= 1;
-            } else {
-                break;
-            }
-        }
-        simplified.push(points[0]);
-        simplified.push(points[1]);
-        simplified.push(points[len - 2]);
-        simplified.push(points[len - 1]);
-        contour.points = simplified;
-        contours[i] = contour;
-    }
-    contours
-    
-}
+// pub fn simplify_contours(
+//     contours: &mut Vec<Contours>,
+//     simplify_tolerant: f64,
+//     simplify_count: f64,
+// ) -> &mut Vec<Contours> {
+//     // let mut i: usize;
+//     // let mut j: usize;
+//     let mut k: usize;
+//     // let mut x: f64;
+//     // let mut y: f64;
+//     let mut x0: isize;
+//     let mut y0: isize;
+//     let mut x1: isize;
+//     let mut y1: isize;
+//     let mut x2: isize;
+//     let mut y2: isize;
+//     let mut d: f64;
+//     let mut dmax: f64;
+//     let mut index: usize;
+//     let mut points: Vec<isize>;
+//     let mut contour: Contours;
+//     let mut simplified: Vec<isize>;
+//     let mut len: usize;
+//     let mut count: usize;
+//     let mut tolerance: f64 = simplify_tolerant;
+//     let max_count: usize = simplify_count as usize;
 
-fn distance(x0: isize, y0: isize, x1: isize, y1: isize, x2: isize, y2: isize) -> f64 {
-    let dx: isize = x2 - x1;
-    let dy: isize = y2 - y1;
-    let d: f64;
-    let result: f64;
+//     for i in 0..contours.len() {
+//         contour = contours[i].clone();
+//         points = contour.points;
+//         simplified = Vec::new();
+//         len = points.len();
+//         if len < 6 {
+//             continue;
+//         }
+//         count = max_count;
+//         if count > len / 2 {
+//             count = len / 2;
+//         }
+//         if count < 2 {
+//             continue;
+//         }
+//         if tolerance <= 0.0 {
+//             tolerance = 0.01;
+//         }
+//         while count > 2 {
+//             dmax = 0.0;
+//             index = 0;
+//             x0 = points[0];
+//             y0 = points[1];
+//             x1 = points[len - 2];
+//             y1 = points[len - 1];
+//             for j in 2..(len - 3) {
+//                 k = j + 1;
+//                 x2 = points[k];
+//                 y2 = points[k + 1];
+//                 d = distance(x0, y0, x1, y1, x2, y2);
+//                 if d > dmax {
+//                     index = j;
+//                     dmax = d;
+//                 }
+//             }
+//             if dmax > tolerance {
+//                 simplified.push(points[index]);
+//                 simplified.push(points[index + 1]);
+//                 points.remove(index);
+//                 points.remove(index);
+//                 len -= 2;
+//                 count -= 1;
+//             } else {
+//                 break;
+//             }
+//         }
+//         simplified.push(points[0]);
+//         simplified.push(points[1]);
+//         simplified.push(points[len - 2]);
+//         simplified.push(points[len - 1]);
+//         contour.points = simplified;
+//         contours[i] = contour;
+//     }
+//     contours
+// }
 
-    if dx != 0 {
-        d = dy as f64 / dx as f64;
-        result = (y2 as f64 - y0 as f64 - d * (x2 as f64 - x0 as f64)) / (dx as f64 * dx  as f64+ dy as f64 * dy as f64).sqrt();
-    } else {
-        result = (x2 as f64 - x0 as f64) / (dy as f64 * dy as f64 + dx as f64 * dx as f64).sqrt();
-    }
-    result
-}
+// fn distance(x0: isize, y0: isize, x1: isize, y1: isize, x2: isize, y2: isize) -> f64 {
+//     let dx: isize = x2 - x1;
+//     let dy: isize = y2 - y1;
+//     let d: f64;
+//     let result: f64;
+
+//     if dx != 0 {
+//         d = dy as f64 / dx as f64;
+//         result = (y2 as f64 - y0 as f64 - d * (x2 as f64 - x0 as f64))
+//             / (dx as f64 * dx as f64 + dy as f64 * dy as f64).sqrt();
+//     } else {
+//         result = (x2 as f64 - x0 as f64) / (dy as f64 * dy as f64 + dx as f64 * dx as f64).sqrt();
+//     }
+//     result
+// }

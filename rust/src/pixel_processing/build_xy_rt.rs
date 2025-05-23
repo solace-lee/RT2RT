@@ -2,7 +2,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::init_data::init_json::ImageInfo;
 
-use super::magic_wand::{Contours, Mask, trace_contours};
+use super::magic_wand::{Contours, Mask, Point, trace_contours};
+
+use super::smooth::{Options, Vec4Point, contour_smooth_by_level, smooth_by_radius};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 
@@ -24,8 +26,22 @@ pub struct MaskBounds {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RTContours {
-    pub x: Vec<Vec<Contours>>,
-    pub y: Vec<Vec<Contours>>,
+    pub x: Vec<Vec<Vec<Point>>>,
+    pub y: Vec<Vec<Vec<Point>>>,
+}
+
+fn main() {
+    let contour = vec![
+        Point { x: 1.0, y: 2.0 },
+        Point { x: 3.0, y: 4.0 },
+        Point { x: 5.0, y: 6.0 },
+        Point { x: 7.0, y: 8.0 },
+    ];
+
+    let opts = Options { radius: 2.0 };
+    let smoothed_contour = smooth_by_radius(&contour, &opts);
+
+    println!("{:?}", smoothed_contour);
 }
 
 // 基于线数据构建层mask
@@ -157,7 +173,7 @@ pub fn mask_to_rt(all_mask: RTMask, image_info: &ImageInfo) -> RTContours {
         let mask_item = &x_rt[index];
 
         // 提取mask的轮廓
-        let mut contours = trace_contours(Mask {
+        let contours = trace_contours(Mask {
             data: mask_item,
             width: *row as isize,
             height: *lay_num as isize,
@@ -166,25 +182,8 @@ pub fn mask_to_rt(all_mask: RTMask, image_info: &ImageInfo) -> RTContours {
             maxx,
             maxy: maxy + 1,
         });
-        // if index == 64 {
-        //     println!("hh, {:#?}, {}, {}", contours, minx, maxx);
-        //     output::output(&contours, "./json/xxx.json");
-        // }
 
-        for item in &mut contours {
-            // 轮廓数
-            let length = item.points.len();
-            for i in 0..(length / 2) {
-                // 遍历每个轮廓
-                let y = i * 2;
-                // let z = item.points[y + 1];
-                // let dy =
-                //     px_position_patient[((layer_num + z as usize) % layer_num) * 3 + 1] as isize;
-                const DY: isize = 0; // todo 后面直接用像素坐标
-                item.points[y] += DY;
-            }
-        }
-        result_data.x[index] = contours;
+        result_data.x[index] = smooth_rt(&contours, *pixel_spacing_normalized);
     }
 
     // Y截面
@@ -202,7 +201,7 @@ pub fn mask_to_rt(all_mask: RTMask, image_info: &ImageInfo) -> RTContours {
         let mask_item = &y_rt[index];
 
         // 提取mask的轮廓
-        let mut contours = trace_contours(Mask {
+        let contours = trace_contours(Mask {
             data: mask_item,
             width: *column as isize,
             height: *lay_num as isize,
@@ -211,19 +210,59 @@ pub fn mask_to_rt(all_mask: RTMask, image_info: &ImageInfo) -> RTContours {
             maxx,
             maxy: maxy + 1,
         });
-        for item in &mut contours {
-            // 轮廓数
-            let length = item.points.len();
-            for i in 0..(length / 2) {
-                // 遍历每个轮廓
-                let x = i * 2;
-                let z = item.points[x + 1];
-                // let dx = px_position_patient[(layer_num + z as usize) % layer_num * 3] as isize;
-                const DX: isize = 0; // todo 后面直接用像素坐标
-                item.points[x] += DX;
-            }
-        }
-        result_data.y[index] = contours;
+
+        result_data.y[index] = smooth_rt(&contours, *pixel_spacing_normalized);
     }
     result_data
+}
+
+fn smooth_rt(contours: &Vec<Contours>, pixel_spacing_normalized: f64) -> Vec<Vec<Point>> {
+    let mut edge_coords: Vec<Vec<Point>> = Vec::new();
+    let distance = pixel_spacing_normalized * 0.4;
+    for item in contours {
+        let points = smooth_by_radius(&item.points, &Options { radius: 2.0 });
+        let mut coords: Vec<Vec4Point> = Vec::new();
+        let len = points.len();
+        for i in 0..len {
+            if i == 0 {
+                let p = &points[i];
+                let y = p.y * pixel_spacing_normalized;
+                coords.push(Vec4Point {
+                    x: p.y + 1.0,
+                    y,
+                    z: 0.0,
+                    old_y: y,
+                });
+            }
+            let next_raw_p = &points[(i + 1 + len) % len];
+            let next_y = next_raw_p.y * pixel_spacing_normalized;
+            let mut next_p: Vec4Point = Vec4Point {
+                x: next_raw_p.x + 1.0,
+                y: next_y,
+                z: 0.0,
+                old_y: next_y,
+            };
+
+            let current_point = coords[i];
+            // 处理单层问题
+            if current_point.old_y == next_p.y {
+                if current_point.x == next_p.x {
+                    if current_point.old_y == current_point.y {
+                        coords[i].y += distance;
+                    }
+                    next_p.y += distance;
+                } else {
+                    if current_point.old_y == current_point.y {
+                        coords[i].y -= distance;
+                    }
+                    next_p.y -= distance;
+                }
+            }
+
+            coords.push(next_p);
+        }
+        let smooth_coord: Vec<Point> = contour_smooth_by_level(&coords, 2.0);
+        edge_coords.push(smooth_coord);
+    }
+    edge_coords
 }
