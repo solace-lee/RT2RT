@@ -131,8 +131,8 @@ pub fn smooth_by_radius(contour: &[Point], opts: &Options) -> Vec<Point> {
 }
 
 pub fn contour_smooth_by_level(contour: &Vec<Vec4Point>, level: f64) -> Vec<Point> {
-    let p = 3;
-    let n = 6;
+    let p = 3 + (level / 10.0).round() as usize;
+    let n = (level * 3.0).ceil() as usize;
     let radius_points = contour;
 
     // NURBS 中顶点必须大于阶次数
@@ -216,6 +216,7 @@ fn get_uniform_knots(points: &Vec<[f64; 2]>, p: usize) -> Vec<f64> {
 fn curve_point(p: usize, u: &Vec<f64>, points: &Vec<[f64; 2]>, u_val: f64) -> [f64; 2] {
     let span = find_span(p, u_val, u);
     let n = basis_funs(span, u_val, p, u);
+    // print!("points: {:?}, p: {}, u: {:?}\n", span, p, points.len());
     let mut c = points[span - p].map(|v| v * n[0]);
     for i in 1..=p {
       let a = points[span - p + i].map(|v| v * n[i]);

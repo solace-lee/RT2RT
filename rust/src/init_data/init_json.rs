@@ -25,6 +25,8 @@ pub struct ImageInfo {
     #[serde(rename = "yLayer")]
     pub y_layer: f64, // y轴 像素/ 层thickness / column_pixel_spacing
     // #[serde(flatten)]
+    #[serde(rename = "returnVolume")]
+    pub return_volume: bool, // 是否返回体积数据
     pub data: Vec<Vec<Vec<f32>>>,
 }
 

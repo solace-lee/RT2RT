@@ -33,21 +33,21 @@ fn main() {
       "扫描线算法耗时：{:?}",
       sys_time2.duration_since(sys_time1).expect("时间倒转了")
     );
-    // println!("轮廓的边界为：{:#?}", mask_volume);
 
 
     let sys_time1 = SystemTime::now();
     // 生成切面mask轮廓
-    let rt_build_mask = generate_mask(mask_volume, &result);
+    let rt_build_mask = generate_mask(&mask_volume, &result);
     let sys_time2 = SystemTime::now();
     println!(
         "切面mask耗时：{:?}",
         sys_time2.duration_since(sys_time1).expect("时间倒转了")
     );
+    println!("mask长度为：{:#?}", rt_build_mask.x_rt[0].len());
 
     let sys_time1 = SystemTime::now();
     // 轮廓提取
-    let rt_build_result = mask_to_rt(rt_build_mask, &result);
+    let rt_build_result = mask_to_rt(rt_build_mask, mask_volume,&result);
     let sys_time2 = SystemTime::now();
     println!(
         "轮廓提取耗时：{:?}",

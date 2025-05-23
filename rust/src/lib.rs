@@ -20,9 +20,9 @@ pub fn rt2rt(val: JsValue) -> JsValue {
     // 扫描线算法
     let mask_volume = scan_line(rt_pxdata_and_bounds, &params);
     // 生成切面mask轮廓
-    let rt_build_mask = generate_mask(mask_volume, &params);
+    let rt_build_mask = generate_mask(&mask_volume, &params);
     // 轮廓提取
-    let rt_build_result = mask_to_rt(rt_build_mask, &params);
+    let rt_build_result = mask_to_rt(rt_build_mask, mask_volume, &params);
     serde_wasm_bindgen::to_value(&rt_build_result).unwrap()
 }
 
