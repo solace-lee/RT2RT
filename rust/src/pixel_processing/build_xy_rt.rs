@@ -35,23 +35,22 @@ pub fn generate_mask(mask_volume: &Vec<i8>, bounds: &ImageInfo) -> RTMask {
     let ImageInfo {
         column,
         row,
-        lay_num,
-        x_layer, // x轴 像素/层
-        y_layer, // y轴 像素/ 层
+        height,
+        pixel_count,
         ..
     } = bounds;
 
-    let x_layer_num = (*column as f64 / x_layer).ceil(); // 计算X切面的层数
-    let y_layer_num = (*row as f64 / y_layer).ceil(); // 计算Y切面的层数
+    let x_layer_num = *column / pixel_count[0]; // 计算X切面的层数
+    let y_layer_num = *row / pixel_count[1]; // 计算Y切面的层数
 
     // 初始化mask
     let mut result = RTMask {
-        x_rt: vec![vec![0; (row * lay_num) as usize]; x_layer_num as usize],
-        y_rt: vec![vec![0; (column * lay_num) as usize]; y_layer_num as usize],
+        x_rt: vec![vec![0; (row * height) as usize]; x_layer_num as usize],
+        y_rt: vec![vec![0; (column * height) as usize]; y_layer_num as usize],
         x_bounds: vec![
             MaskBounds {
                 minx: *row as isize,
-                miny: *lay_num as isize,
+                miny: *height as isize,
                 maxx: 0,
                 maxy: 0,
             };
@@ -60,7 +59,7 @@ pub fn generate_mask(mask_volume: &Vec<i8>, bounds: &ImageInfo) -> RTMask {
         y_bounds: vec![
             MaskBounds {
                 minx: *column as isize,
-                miny: *lay_num as isize,
+                miny: *height as isize,
                 maxx: 0,
                 maxy: 0,
             };
@@ -68,10 +67,9 @@ pub fn generate_mask(mask_volume: &Vec<i8>, bounds: &ImageInfo) -> RTMask {
         ],
     };
 
-    for z_num in 0..*lay_num {
+    for z_num in 0..*height {
         let z_lay = z_num * column * row;
         for y_num in 0..*row {
-            let current_y_layer = (y_num as f64 / y_layer).ceil();
             let y_lay = y_num * column;
             for x_num in 0..*column {
                 let index = z_lay + y_lay + x_num;
@@ -80,10 +78,9 @@ pub fn generate_mask(mask_volume: &Vec<i8>, bounds: &ImageInfo) -> RTMask {
                     continue;
                 }
                 // 生成x切面
-                let current_x_layer = (x_num as f64 / x_layer).ceil();
-                let is_x_true = (current_x_layer * x_layer).floor() as u32 == x_num;
+                let is_x_true = (x_num % pixel_count[0]) == 0;
                 if is_x_true {
-                    let lay_index = current_x_layer as usize;
+                    let lay_index = (x_num / pixel_count[0]) as usize;
 
                     if result.x_bounds[lay_index].minx > y_num as isize {
                         result.x_bounds[lay_index].minx = y_num as isize
@@ -101,9 +98,9 @@ pub fn generate_mask(mask_volume: &Vec<i8>, bounds: &ImageInfo) -> RTMask {
                 }
 
                 // 生成y切面
-                let is_y_true = (current_y_layer * y_layer).floor() as u32 == y_num;
+                let is_y_true = (y_num % pixel_count[1]) == 0;
                 if is_y_true {
-                    let lay_index = current_y_layer as usize;
+                    let lay_index = (y_num / pixel_count[1]) as usize;
 
                     if result.y_bounds[lay_index].minx > x_num as isize {
                         result.y_bounds[lay_index].minx = x_num as isize;
@@ -129,7 +126,7 @@ pub fn mask_to_rt(all_mask: RTMask, image_info: &ImageInfo) -> RTContours {
     let ImageInfo {
         column,
         row,
-        lay_num,
+        height,
         pixel_spacing_normalized,
         ..
     } = image_info;
@@ -164,7 +161,7 @@ pub fn mask_to_rt(all_mask: RTMask, image_info: &ImageInfo) -> RTContours {
         let contours = trace_contours(Mask {
             data: mask_item,
             width: *row as isize,
-            height: *lay_num as isize,
+            height: *height as isize,
             minx,
             miny,
             maxx,
@@ -193,7 +190,7 @@ pub fn mask_to_rt(all_mask: RTMask, image_info: &ImageInfo) -> RTContours {
         let contours = trace_contours(Mask {
             data: mask_item,
             width: *column as isize,
-            height: *lay_num as isize,
+            height: *height as isize,
             minx,
             miny,
             maxx,
